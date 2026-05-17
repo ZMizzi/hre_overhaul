@@ -1,0 +1,6 @@
+﻿l_english:
+ form_frisia_kingdom_decision: "Restore the Kingdom of Frisia"
+ form_frisia_kingdom_decision_desc: "Restore the Kingdom of Frisia."
+ form_frisia_kingdom_decision_tooltip: "Reform the Kingdom of Frisia."
+ form_frisia_kingdom_decision_confirm: "Restore the Kingdom"
+ form_frisia_kingdom_decision_county_req: "Hold at least 6 of the 12 historical Frisian counties (within $d_holland$, $d_gelre$, $d_utrecht$, or $d_frisia$)"

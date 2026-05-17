@@ -1,0 +1,46 @@
+form_frisia_kingdom_decision = {
+	picture = {
+		reference = "gfx/interface/illustrations/decisions/decision_found_kingdom.dds"
+	}
+	desc = form_frisia_kingdom_decision_desc
+	selection_tooltip = form_frisia_kingdom_decision_tooltip
+	decision_group_type = major
+
+	is_shown = {
+		is_ai = no
+		NOT = { exists = title:k_frisia.holder }
+		OR = {
+			culture = culture:dutch
+			culture = culture:frisian
+		}
+	}
+
+	is_valid = {
+		custom_tooltip = {
+			text = form_frisia_kingdom_decision_county_req
+			calc_true_if = {
+				amount >= 6
+				completely_controls = title:c_holland
+				completely_controls = title:c_westfriesland
+				completely_controls = title:c_zeeland
+				completely_controls = title:c_guelders
+				completely_controls = title:c_arnhem
+				completely_controls = title:c_zutphen
+				completely_controls = title:c_nedersticht
+				completely_controls = title:c_oversticht
+				completely_controls = title:c_groningen
+				completely_controls = title:c_dokkum
+				completely_controls = title:c_ostfriesland
+				completely_controls = title:c_frisia
+			}
+		}
+	}
+
+	cost = {
+		gold = 500
+	}
+
+	effect = {
+		form_frisia_scripted_effect = yes
+	}
+}
