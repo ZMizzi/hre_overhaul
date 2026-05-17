@@ -1,0 +1,25 @@
+king_feudal_male_dutch = {
+	type = character
+	gender = male
+	special = holder
+	tier = kingdom
+	priority = 47
+	governments = { feudal_government administrative_government }
+	name_lists = { name_list_dutch }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
+
+king_feudal_female_dutch = {
+	type = character
+	gender = female
+	special = holder
+	tier = kingdom
+	priority = 47
+	governments = { feudal_government administrative_government }
+	name_lists = { name_list_dutch }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
