@@ -1,0 +1,79 @@
+﻿# Shared effects for College-of-Electors management.
+# Called from common/character_interactions/hre_overhaul_elector_interactions.txt.
+
+
+# Designate scope:recipient's PRIMARY title as a new elector seat.
+# Adds the title to hre_elector_list, flags the recipient, refreshes the
+# title-level tooltip cache (hre_elector_1..7 on title:e_hre).
+designate_elector_effect = {
+	scope:recipient.primary_title = {
+		add_to_global_variable_list = { name = hre_elector_list target = this }
+	}
+	scope:recipient = {
+		add_character_flag = prince_elector_flag
+	}
+	rebuild_hre_elector_cache_effect = yes
+}
+
+
+# Strip electoral dignity from scope:recipient.
+# Removes ALL of their currently-held titles from hre_elector_list (covers the
+# rare case of a vassal holding multiple elector seats), unflags them, and
+# refreshes the title-level tooltip cache.
+strip_elector_effect = {
+	scope:recipient = {
+		every_held_title = {
+			limit = {
+				is_target_in_global_variable_list = { name = hre_elector_list target = this }
+			}
+			remove_list_global_variable = { name = hre_elector_list target = this }
+		}
+		remove_character_flag = prince_elector_flag
+	}
+	rebuild_hre_elector_cache_effect = yes
+}
+
+
+# Send a notification event to the Emperor that an elector just lost their
+# prince_elector_flag. Called from on_title_lost and on_vassal_change in
+# common/on_action/hre_overhaul_elector_actions.txt — NOT from the Emperor's
+# own strip_elector_interaction (the Emperor knows when they did it).
+#
+# $EVENT$ = the event ID to fire:
+#   hre_overhaul_elector.0001 — ex-elector lost their last electorate title
+#   hre_overhaul_elector.0002 — ex-elector is no longer a direct HRE vassal
+#
+# Caller scope: ROOT = the character who just lost the flag.
+notify_emperor_elector_lost_effect = {
+	save_scope_as = ex_elector
+	title:e_hre.holder ?= {
+		trigger_event = {
+			id = $EVENT$
+		}
+	}
+}
+
+
+# Rebuild the title-level tooltip cache from current hre_elector_list state.
+# Vanilla's hre_elector_list_save_effect (00_major_decisions_scripted_effects.txt:3348)
+# uses NOT = { has_variable = hre_elector_N } gates, so the existing cache vars
+# must be cleared before re-running it — otherwise the new state is layered on
+# top of stale entries.
+#
+# 7 slots hardcoded because vanilla writes exactly hre_elector_1..7 with
+# `ordered_in_global_list = { max = 7 order_by = tier }`. Our no-cap design
+# can put more than 7 titles in hre_elector_list, in which case the tooltip
+# enumeration shows the top 7 by tier — the rest are functionally electors
+# but invisible in vanilla's enumeration tooltips.
+rebuild_hre_elector_cache_effect = {
+	title:e_hre = {
+		remove_variable = hre_elector_1
+		remove_variable = hre_elector_2
+		remove_variable = hre_elector_3
+		remove_variable = hre_elector_4
+		remove_variable = hre_elector_5
+		remove_variable = hre_elector_6
+		remove_variable = hre_elector_7
+	}
+	hre_elector_list_save_effect = yes
+}

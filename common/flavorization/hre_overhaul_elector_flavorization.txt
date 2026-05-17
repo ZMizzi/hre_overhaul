@@ -1,0 +1,190 @@
+﻿# Tier-styling overrides for Prince-Electors.
+#
+# Anyone with the prince_elector_flag character flag whose Causing Title
+# (their primary title) is duchy / county / barony tier is styled as
+# "Prince Elector" (feudal / clan / administrative) or "Elector Archbishop"
+# (theocracy), replacing the default Duke / Count / Baron rank text.
+#
+# Characters whose primary is kingdom or empire tier keep their default
+# King / Emperor styling — no rule below matches them, so vanilla's
+# tier-based flavorization wins.
+#
+# The flag itself is maintained by common/on_action/hre_overhaul_elector_actions.txt
+# and by the Emperor's designate/strip interactions.
+#
+# Why a separate rule per tier: the `tier` flavorization field accepts a
+# single enum value (barony / county / duchy / kingdom / empire / none), not
+# an array. To cover duchy-or-lower we duplicate each (gender × government)
+# rule three times — once per tier. Same pattern vanilla uses for the
+# Carthaginian family at common/flavorization/00_title_holders.txt:41-135
+# and the Ecumenical Patriarch at the same file:5-28 (tier=kingdom only).
+#
+# `top_liege = no` means the contexted character is the actual title holder,
+# not their top liege. Without it every elector would inherit the Emperor's
+# styling instead of being styled on their own merits.
+
+
+# ============================================================================
+# PRINCE ELECTOR — feudal / clan / administrative governments
+# ============================================================================
+
+prince_elector_male_duchy = {
+	type = character
+	gender = male
+	special = holder
+	tier = duchy
+	priority = 301
+	flag = prince_elector_flag
+	governments = { feudal_government clan_government administrative_government }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
+
+prince_elector_female_duchy = {
+	type = character
+	gender = female
+	special = holder
+	tier = duchy
+	priority = 301
+	flag = prince_elector_flag
+	governments = { feudal_government clan_government administrative_government }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
+
+prince_elector_male_county = {
+	type = character
+	gender = male
+	special = holder
+	tier = county
+	priority = 301
+	flag = prince_elector_flag
+	governments = { feudal_government clan_government administrative_government }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
+
+prince_elector_female_county = {
+	type = character
+	gender = female
+	special = holder
+	tier = county
+	priority = 301
+	flag = prince_elector_flag
+	governments = { feudal_government clan_government administrative_government }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
+
+prince_elector_male_barony = {
+	type = character
+	gender = male
+	special = holder
+	tier = barony
+	priority = 301
+	flag = prince_elector_flag
+	governments = { feudal_government clan_government administrative_government }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
+
+prince_elector_female_barony = {
+	type = character
+	gender = female
+	special = holder
+	tier = barony
+	priority = 301
+	flag = prince_elector_flag
+	governments = { feudal_government clan_government administrative_government }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
+
+
+# ============================================================================
+# ELECTOR ARCHBISHOP — theocracy government
+# ============================================================================
+
+elector_archbishop_male_duchy = {
+	type = character
+	gender = male
+	special = holder
+	tier = duchy
+	priority = 301
+	flag = prince_elector_flag
+	governments = { theocracy_government }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
+
+elector_archbishop_female_duchy = {
+	type = character
+	gender = female
+	special = holder
+	tier = duchy
+	priority = 301
+	flag = prince_elector_flag
+	governments = { theocracy_government }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
+
+elector_archbishop_male_county = {
+	type = character
+	gender = male
+	special = holder
+	tier = county
+	priority = 301
+	flag = prince_elector_flag
+	governments = { theocracy_government }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
+
+elector_archbishop_female_county = {
+	type = character
+	gender = female
+	special = holder
+	tier = county
+	priority = 301
+	flag = prince_elector_flag
+	governments = { theocracy_government }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
+
+elector_archbishop_male_barony = {
+	type = character
+	gender = male
+	special = holder
+	tier = barony
+	priority = 301
+	flag = prince_elector_flag
+	governments = { theocracy_government }
+	flavourization_rules = {
+		top_liege = no
+	}
+}
+
+elector_archbishop_female_barony = {
+	type = character
+	gender = female
+	special = holder
+	tier = barony
+	priority = 301
+	flag = prince_elector_flag
+	governments = { theocracy_government }
+	flavourization_rules = {
+		top_liege = no
+	}
+}

@@ -1,12 +1,52 @@
 ﻿l_english:
- # Generic placeholder names for the seven electorate duchies.
- # These are static and intentionally non-flavorful while we validate that the
- # princely_elective system correctly elevates their holders to elector status.
- # Real names / dynamic naming can come later.
- d_hre_electorate_1: "Imperial Electorate"
- d_hre_electorate_2: "Imperial Electorate"
- d_hre_electorate_3: "Imperial Electorate"
- d_hre_electorate_4: "Imperial Electorate"
- d_hre_electorate_5: "Bishop Electorate"
- d_hre_electorate_6: "Bishop Electorate"
- d_hre_electorate_7: "Bishop Electorate"
+ # Rank styling for Prince-Electors — see
+ # common/flavorization/hre_overhaul_elector_flavorization.txt.
+ # Replaces the default Duke / Count / King rank text when the character has
+ # the prince_elector_flag character flag (set on holders of any title in
+ # hre_elector_list). Split by character government:
+ #   feudal / clan / administrative → Prince Elector / Princess Elector
+ #   theocracy                      → Elector Archbishop / Elector Archbishopess
+ # 12 keys, 4 unique strings: tier filtering in the flavorization rules means
+ # each (gender × government) styling needs three keyed variants (duchy /
+ # county / barony) that all collapse to the same display string. Kingdom and
+ # empire tier electors are intentionally absent so they keep vanilla King /
+ # Emperor styling.
+ prince_elector_male_duchy: "Prince-Elector"
+ prince_elector_male_county: "Prince-Elector"
+ prince_elector_male_barony: "Prince-Elector"
+ prince_elector_female_duchy: "Princess-Elector"
+ prince_elector_female_county: "Princess-Elector"
+ prince_elector_female_barony: "Princess-Elector"
+ elector_archbishop_male_duchy: "Elector-Archbishop"
+ elector_archbishop_male_county: "Elector-Archbishop"
+ elector_archbishop_male_barony: "Elector-Archbishop"
+ elector_archbishop_female_duchy: "Elector-Archbishopess"
+ elector_archbishop_female_county: "Elector-Archbishopess"
+ elector_archbishop_female_barony: "Elector-Archbishopess"
+
+ # ----------------------------------------------------------------------------
+ # Character interactions — see
+ # common/character_interactions/hre_overhaul_elector_interactions.txt.
+ # ----------------------------------------------------------------------------
+ designate_elector_interaction: "Designate as Elector"
+ designate_elector_interaction_desc: "Elevate [recipient.GetTitledFirstName] to the College of Electors. Their primary title becomes an elector seat, and they will carry the dignity of Prince-Elector until they lose the title or their direct vassalage."
+ designate_elector_notification: "[actor.GetTitledFirstName] has elevated you to the College of Electors."
+ designate_elector_not_already_elector_tt: "$recipient$ is not already an Elector"
+ designate_elector_primary_not_in_list_tt: "$recipient$'s primary title is not already an electorate"
+
+ strip_elector_interaction: "Strip Electoral Dignity"
+ strip_elector_interaction_desc: "Strip [recipient.GetTitledFirstName] of their electoral dignity. The seats they hold will be removed from the College of Electors."
+ strip_elector_notification: "[actor.GetTitledFirstName] has stripped you of your electoral dignity."
+
+ # ----------------------------------------------------------------------------
+ # Notification events — see events/hre_overhaul_elector_events.txt.
+ # Sent to the Emperor when a vassal loses prince_elector_flag for non-imperial
+ # reasons (lost title outside the strip interaction, or lost direct vassalage).
+ # ----------------------------------------------------------------------------
+ hre_overhaul_elector.0001.t: "An Electoral Seat Vacated"
+ hre_overhaul_elector.0001.desc: "[ex_elector.GetTitledFirstName] no longer holds an electoral seat. The dignity of Prince-Elector has passed from them."
+ hre_overhaul_elector.0001.a: "So be it."
+
+ hre_overhaul_elector.0002.t: "An Elector Strays From the Throne"
+ hre_overhaul_elector.0002.desc: "[ex_elector.GetTitledFirstName] has lost the privilege of being a direct vassal of the Emperor. The dignity of Prince-Elector has passed from them."
+ hre_overhaul_elector.0002.a: "So be it."

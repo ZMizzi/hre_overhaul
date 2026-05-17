@@ -1,20 +1,56 @@
-﻿# Replace vanilla's College of Electors with our seven electorate duchies.
+﻿# Prince-Elector seat management.
 #
-# Initial 1066 holders are set in history/titles/hre_overhaul_electors.txt —
-# title history is the idiomatic mechanism for date-bound holder assignment.
+# The electorate is a property of a TITLE (membership in hre_elector_list), not
+# a separate token attached to a character. Whoever holds an elector seat AND
+# is a direct vassal of the Emperor is an elector; if the seat changes hands
+# (claim, inheritance, gavelkind, Emperor revoke) or the liege chain changes,
+# the elector status follows automatically.
 #
-# Vanilla on_game_start (common/on_action/game_start.txt:200-234) seeds
-# hre_elector_list with the historical seat titles (c_cologne, c_mainz, c_trier,
-# d_bohemia, d_east_franconia, d_ostmark, d_angria) and writes a parallel cache
-# of those titles to variables hre_elector_1..hre_elector_7 on title:e_hre for
-# tooltip use. This file undoes both and replaces with d_hre_electorate_1..7.
+# Why title-bound and not character-bound: a character-bound token (a held
+# title we grant separately, a vassal contract, a character flag set by some
+# other mechanism) decouples the electorate from the seat. If d_bohemia is
+# claimed away from a duke who also held our token, the token would stay with
+# the losing duke and the new Duke of Bohemia wouldn't be an elector. Putting
+# the seat title itself in hre_elector_list avoids this: princely_elective at
+# 01_princely_elective.txt:94-100 reads the list as a set of titles and gives
+# the +75 priority bump to anyone holding one of them.
 #
-# NOTE: extending a vanilla-defined on_action requires the `on_actions` chain —
-# defining `effect = { ... }` directly on `on_game_start_after_lobby` REPLACES
-# vanilla's effect block (engine warns "more than one 'effect' defined" and
-# keeps the most recently loaded one). Vanilla's after-lobby effect runs
-# `disable_succession_calculation = yes` and other critical init; we must not
-# clobber it. The `on_actions` block, by contrast, is additive across files.
+# Vanilla's initial seven seats (game_start.txt:200-232):
+#   c_cologne, c_mainz, c_trier, d_bohemia, d_east_franconia, d_ostmark, d_angria
+#
+# Our set substitutes d_swabia for d_ostmark — slightly more historical for
+# the 1066 bookmark. We clear and repopulate rather than surgically swap one
+# entry, so the hre_elector_1..7 tooltip cache (built by
+# hre_elector_list_save_effect) is regenerated cleanly without stale d_ostmark
+# entries lingering.
+#
+# `prince_elector_flag` is a character flag used by flavorization to style the
+# holder as "Prince Elector" / "Elector Archbishop". The desired invariant:
+#
+#   has prince_elector_flag  iff  (holds a title in hre_elector_list
+#                                  AND liege = title:e_hre.holder)
+#
+# The direct-vassal requirement mirrors vanilla's princely_elective filter
+# at 01_princely_elective.txt:72-77, so the cosmetic styling matches who is
+# actually picked in the election. Sub-vassals (e.g., the 1066 c_mainz holder
+# Siegfried, who at start is under d_west_franconia) hold an elector seat but
+# don't qualify as electors — they shouldn't be styled as one either.
+#
+# The three hooks below maintain that invariant on every relevant event:
+#   on_game_start_after_lobby — seed flag on initial direct-vassal holders
+#   on_title_gain             — flag character when they gain an elector seat
+#                               (only if they're a direct HRE vassal)
+#   on_title_lost             — strip flag when last elector seat is lost
+#   on_vassal_change          — full re-sync when liege changes
+#
+# NOTE on hook syntax: extending a vanilla-defined on_action requires the
+# `on_actions` chain pattern. A top-level `effect = { ... }` block REPLACES
+# vanilla's effect; the `on_actions` list is additive.
+
+
+# ============================================================================
+# GAME-START SETUP
+# ============================================================================
 
 on_game_start_after_lobby = {
 	on_actions = {
@@ -27,7 +63,7 @@ hre_overhaul_setup_electors_on_action = {
 		if = {
 			limit = { exists = title:e_hre.holder }
 
-			# Wipe vanilla's seat-based elector list and the title-level cache vars.
+			# Wipe vanilla's initial seven seats and the title-level cache vars.
 			clear_global_variable_list = hre_elector_list
 			title:e_hre = {
 				remove_variable = hre_elector_1
@@ -39,20 +75,133 @@ hre_overhaul_setup_electors_on_action = {
 				remove_variable = hre_elector_7
 			}
 
-			# Populate the elector list with our electorate duchies.
-			# princely_elective at 01_princely_elective.txt:94-100 reads this list
-			# to apply the +75 elector priority modifier.
-			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_1 }
-			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_2 }
-			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_3 }
-			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_4 }
-			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_5 }
-			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_6 }
-			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_7 }
+			# Our seven seats. Six match vanilla; d_swabia replaces d_ostmark.
+			add_to_global_variable_list = { name = hre_elector_list target = title:d_bohemia }
+			add_to_global_variable_list = { name = hre_elector_list target = title:d_angria }
+			add_to_global_variable_list = { name = hre_elector_list target = title:d_east_franconia }
+			add_to_global_variable_list = { name = hre_elector_list target = title:d_swabia }
+			add_to_global_variable_list = { name = hre_elector_list target = title:c_mainz }
+			add_to_global_variable_list = { name = hre_elector_list target = title:c_cologne }
+			add_to_global_variable_list = { name = hre_elector_list target = title:c_trier }
 
-			# Rebuild the title-level tooltip cache (hre_elector_1..7 on title:e_hre)
-			# from the now-replaced hre_elector_list.
+			# Rebuild the title-level tooltip cache (hre_elector_1..7 on title:e_hre).
 			hre_elector_list_save_effect = yes
+
+			# Seed prince_elector_flag — only on holders who are direct HRE vassals.
+			# The `liege = title:e_hre.holder` check excludes sub-vassals (e.g., the
+			# 1066 c_mainz holder, who at start is a vassal of d_west_franconia).
+			# Independent rulers also fail this check and are excluded — matches the
+			# stricter rule we want for cosmetic styling, even though vanilla's
+			# princely_elective filter allows independent de jure vassals.
+			every_in_global_list = {
+				variable = hre_elector_list
+				save_temporary_scope_as = elector_seat
+				scope:elector_seat.holder ?= {
+					if = {
+						limit = { liege = title:e_hre.holder }
+						add_character_flag = prince_elector_flag
+					}
+				}
+			}
+		}
+	}
+}
+
+
+# ============================================================================
+# FLAG MAINTENANCE
+# ============================================================================
+# Vanilla on_title_gain: root = the character who gained the title, scope:title
+# = the title gained. on_title_lost mirrors this for the loser.
+# on_vassal_change: root = the character whose vassalage changed; their new
+# liege is accessible via `liege`.
+
+on_title_gain = {
+	on_actions = {
+		hre_overhaul_elector_title_gain_action
+	}
+}
+
+hre_overhaul_elector_title_gain_action = {
+	effect = {
+		if = {
+			limit = {
+				scope:title = {
+					is_target_in_global_variable_list = { name = hre_elector_list target = this }
+				}
+				# Only style as Prince-Elector if root is a direct HRE vassal.
+				# Sub-vassals holding an elector seat don't qualify as electors
+				# per princely_elective's filter at 01_princely_elective.txt:72-77.
+				exists = title:e_hre.holder
+				liege = title:e_hre.holder
+			}
+			add_character_flag = prince_elector_flag
+		}
+	}
+}
+
+on_title_lost = {
+	on_actions = {
+		hre_overhaul_elector_title_lost_action
+	}
+}
+
+hre_overhaul_elector_title_lost_action = {
+	effect = {
+		if = {
+			limit = {
+				scope:title = {
+					is_target_in_global_variable_list = { name = hre_elector_list target = this }
+				}
+				# Only strip the flag if the lost seat was the character's LAST
+				# electorate. At on_title_lost firing time scope:title is already
+				# removed from any_held_title, so this scan won't re-find it.
+				NOT = {
+					any_held_title = {
+						is_target_in_global_variable_list = { name = hre_elector_list target = this }
+					}
+				}
+				has_character_flag = prince_elector_flag
+			}
+			remove_character_flag = prince_elector_flag
+			notify_emperor_elector_lost_effect = {
+				EVENT = hre_overhaul_elector.0001
+			}
+		}
+	}
+}
+
+on_vassal_change = {
+	on_actions = {
+		hre_overhaul_elector_vassal_change_action
+	}
+}
+
+# Re-sync flag on liege change. Two cases this catches:
+#   1. Sub-vassal acquires direct-HRE-vassal status while still holding an
+#      elector seat → flag should now be added.
+#   2. Direct HRE vassal becomes a sub-vassal (or independent) while holding
+#      an elector seat → flag should be removed.
+# Non-electors hit the else_if branch and are no-ops if they don't already
+# have the flag.
+hre_overhaul_elector_vassal_change_action = {
+	effect = {
+		if = {
+			limit = {
+				any_held_title = {
+					is_target_in_global_variable_list = { name = hre_elector_list target = this }
+				}
+				exists = title:e_hre.holder
+				liege = title:e_hre.holder
+			}
+			add_character_flag = prince_elector_flag
+		}
+		else_if = {
+			limit = { has_character_flag = prince_elector_flag }
+			remove_character_flag = prince_elector_flag
+			notify_emperor_elector_lost_effect = {
+				EVENT = hre_overhaul_elector.0002
+			}
 		}
 	}
 }

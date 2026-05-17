@@ -1,0 +1,58 @@
+﻿namespace = hre_overhaul_elector
+
+# Notifications fired to the Emperor when one of their electors loses the
+# prince_elector_flag due to events outside the Emperor's direct interactions
+# (i.e., NOT from strip_elector_interaction — Emperor already knows when they
+# strip an elector themselves).
+#
+# Both events:
+#   ROOT          = the Emperor (title:e_hre.holder at fire time)
+#   scope:ex_elector = the character who just lost the flag
+
+
+# Triggered from on_title_lost when the ex-elector lost their last electorate
+# title (e.g., title revoked by a third party, title destroyed, title
+# inherited away).
+hre_overhaul_elector.0001 = {
+	type = character_event
+	title = hre_overhaul_elector.0001.t
+	desc = hre_overhaul_elector.0001.desc
+	theme = realm
+
+	left_portrait = {
+		character = root
+		animation = thinking
+	}
+	right_portrait = {
+		character = scope:ex_elector
+		animation = disappointment
+	}
+
+	option = {
+		name = hre_overhaul_elector.0001.a
+	}
+}
+
+
+# Triggered from on_vassal_change when the ex-elector is no longer a direct
+# vassal of the Emperor (became sub-vassal, became independent, or had their
+# vassalage transferred to another lord).
+hre_overhaul_elector.0002 = {
+	type = character_event
+	title = hre_overhaul_elector.0002.t
+	desc = hre_overhaul_elector.0002.desc
+	theme = realm
+
+	left_portrait = {
+		character = root
+		animation = thinking
+	}
+	right_portrait = {
+		character = scope:ex_elector
+		animation = disappointment
+	}
+
+	option = {
+		name = hre_overhaul_elector.0002.a
+	}
+}

@@ -1,0 +1,105 @@
+﻿# Emperor-only character interactions to manage the College of Electors.
+#
+# Designate adds the recipient's primary title to hre_elector_list and flags
+# the recipient. Strip removes ALL of the recipient's titles from the list
+# (in practice this is just their one electorate seat in 99% of cases) and
+# unflags them. No cap on total elector count — Emperor can grow or shrink
+# the College as they like.
+#
+# auto_accept = yes: this is unilateral imperial authority, no AI consent
+# needed. on_auto_accept fires the toast to the recipient.
+
+designate_elector_interaction = {
+	category = interaction_category_vassal
+	icon = designate_favorite
+	interface_priority = 60
+
+	desc = designate_elector_interaction_desc
+
+	is_shown = {
+		# Actor must be the reigning Emperor.
+		exists = title:e_hre.holder
+		scope:actor = title:e_hre.holder
+		scope:actor != scope:recipient
+		# Recipient must be a direct vassal of the Emperor.
+		scope:recipient = {
+			liege = scope:actor
+		}
+	}
+
+	is_valid_showing_failures_only = {
+		scope:actor = { is_alive = yes }
+		scope:recipient = {
+			custom_tooltip = {
+				text = designate_elector_not_already_elector_tt
+				NOT = { has_character_flag = prince_elector_flag }
+			}
+			custom_tooltip = {
+				text = designate_elector_primary_not_in_list_tt
+				primary_title = {
+					NOT = {
+						is_target_in_global_variable_list = { name = hre_elector_list target = this }
+					}
+				}
+			}
+		}
+	}
+
+	on_accept = {
+		designate_elector_effect = yes
+	}
+
+	on_auto_accept = {
+		scope:recipient = {
+			send_interface_message = {
+				title = designate_elector_notification
+				left_icon = scope:actor
+				show_as_tooltip = {
+					designate_elector_effect = yes
+				}
+			}
+		}
+	}
+
+	auto_accept = yes
+}
+
+strip_elector_interaction = {
+	category = interaction_category_vassal
+	icon = designate_favorite
+	interface_priority = 59
+
+	desc = strip_elector_interaction_desc
+
+	is_shown = {
+		exists = title:e_hre.holder
+		scope:actor = title:e_hre.holder
+		scope:actor != scope:recipient
+		scope:recipient = {
+			liege = scope:actor
+			has_character_flag = prince_elector_flag
+		}
+	}
+
+	is_valid_showing_failures_only = {
+		scope:actor = { is_alive = yes }
+	}
+
+	on_accept = {
+		strip_elector_effect = yes
+	}
+
+	on_auto_accept = {
+		scope:recipient = {
+			send_interface_message = {
+				title = strip_elector_notification
+				left_icon = scope:actor
+				show_as_tooltip = {
+					strip_elector_effect = yes
+				}
+			}
+		}
+	}
+
+	auto_accept = yes
+}
