@@ -1,0 +1,91 @@
+﻿# Seven titular landless duchies representing the seats of the College of Electors.
+# These titles have no de jure counties — they are grant/revoke tokens. Holding
+# one (in combination with a regular de jure HRE title) marks a character as a
+# Prince-Elector for princely_elective: vanilla's election script gives a +75
+# priority bump to anyone holding a title that appears in hre_elector_list, and
+# our on_game_start_after_lobby hook replaces vanilla's seven seat titles in
+# that list with the seven d_hre_electorate_* titles defined here.
+
+d_hre_electorate_1 = {
+	color = { 145 80 175 }
+	capital = c_aachen
+	landless = yes
+	definite_form = yes
+	ruler_uses_title_name = no
+	can_use_nomadic_naming = no
+	destroy_if_invalid_heir = no
+	no_automatic_claims = yes
+	always_follows_primary_heir = yes
+}
+
+d_hre_electorate_2 = {
+	color = { 170 100 160 }
+	capital = c_aachen
+	landless = yes
+	definite_form = yes
+	ruler_uses_title_name = no
+	can_use_nomadic_naming = no
+	destroy_if_invalid_heir = no
+	no_automatic_claims = yes
+	always_follows_primary_heir = yes
+}
+
+d_hre_electorate_3 = {
+	color = { 190 120 145 }
+	capital = c_aachen
+	landless = yes
+	definite_form = yes
+	ruler_uses_title_name = no
+	can_use_nomadic_naming = no
+	destroy_if_invalid_heir = no
+	no_automatic_claims = yes
+	always_follows_primary_heir = yes
+}
+
+d_hre_electorate_4 = {
+	color = { 200 140 130 }
+	capital = c_aachen
+	landless = yes
+	definite_form = yes
+	ruler_uses_title_name = no
+	can_use_nomadic_naming = no
+	destroy_if_invalid_heir = no
+	no_automatic_claims = yes
+	always_follows_primary_heir = yes
+}
+
+d_hre_electorate_5 = {
+	color = { 175 130 90 }
+	capital = c_aachen
+	landless = yes
+	definite_form = yes
+	ruler_uses_title_name = no
+	can_use_nomadic_naming = no
+	destroy_if_invalid_heir = no
+	no_automatic_claims = yes
+	always_follows_primary_heir = yes
+}
+
+d_hre_electorate_6 = {
+	color = { 150 110 80 }
+	capital = c_aachen
+	landless = yes
+	definite_form = yes
+	ruler_uses_title_name = no
+	can_use_nomadic_naming = no
+	destroy_if_invalid_heir = no
+	no_automatic_claims = yes
+	always_follows_primary_heir = yes
+}
+
+d_hre_electorate_7 = {
+	color = { 125 95 75 }
+	capital = c_aachen
+	landless = yes
+	definite_form = yes
+	ruler_uses_title_name = no
+	can_use_nomadic_naming = no
+	destroy_if_invalid_heir = no
+	no_automatic_claims = yes
+	always_follows_primary_heir = yes
+}

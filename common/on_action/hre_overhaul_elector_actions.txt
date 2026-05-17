@@ -1,0 +1,58 @@
+﻿# Replace vanilla's College of Electors with our seven electorate duchies.
+#
+# Initial 1066 holders are set in history/titles/hre_overhaul_electors.txt —
+# title history is the idiomatic mechanism for date-bound holder assignment.
+#
+# Vanilla on_game_start (common/on_action/game_start.txt:200-234) seeds
+# hre_elector_list with the historical seat titles (c_cologne, c_mainz, c_trier,
+# d_bohemia, d_east_franconia, d_ostmark, d_angria) and writes a parallel cache
+# of those titles to variables hre_elector_1..hre_elector_7 on title:e_hre for
+# tooltip use. This file undoes both and replaces with d_hre_electorate_1..7.
+#
+# NOTE: extending a vanilla-defined on_action requires the `on_actions` chain —
+# defining `effect = { ... }` directly on `on_game_start_after_lobby` REPLACES
+# vanilla's effect block (engine warns "more than one 'effect' defined" and
+# keeps the most recently loaded one). Vanilla's after-lobby effect runs
+# `disable_succession_calculation = yes` and other critical init; we must not
+# clobber it. The `on_actions` block, by contrast, is additive across files.
+
+on_game_start_after_lobby = {
+	on_actions = {
+		hre_overhaul_setup_electors_on_action
+	}
+}
+
+hre_overhaul_setup_electors_on_action = {
+	effect = {
+		if = {
+			limit = { exists = title:e_hre.holder }
+
+			# Wipe vanilla's seat-based elector list and the title-level cache vars.
+			clear_global_variable_list = hre_elector_list
+			title:e_hre = {
+				remove_variable = hre_elector_1
+				remove_variable = hre_elector_2
+				remove_variable = hre_elector_3
+				remove_variable = hre_elector_4
+				remove_variable = hre_elector_5
+				remove_variable = hre_elector_6
+				remove_variable = hre_elector_7
+			}
+
+			# Populate the elector list with our electorate duchies.
+			# princely_elective at 01_princely_elective.txt:94-100 reads this list
+			# to apply the +75 elector priority modifier.
+			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_1 }
+			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_2 }
+			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_3 }
+			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_4 }
+			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_5 }
+			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_6 }
+			add_to_global_variable_list = { name = hre_elector_list target = title:d_hre_electorate_7 }
+
+			# Rebuild the title-level tooltip cache (hre_elector_1..7 on title:e_hre)
+			# from the now-replaced hre_elector_list.
+			hre_elector_list_save_effect = yes
+		}
+	}
+}

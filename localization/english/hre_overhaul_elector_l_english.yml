@@ -1,0 +1,12 @@
+﻿l_english:
+ # Generic placeholder names for the seven electorate duchies.
+ # These are static and intentionally non-flavorful while we validate that the
+ # princely_elective system correctly elevates their holders to elector status.
+ # Real names / dynamic naming can come later.
+ d_hre_electorate_1: "Imperial Electorate"
+ d_hre_electorate_2: "Imperial Electorate"
+ d_hre_electorate_3: "Imperial Electorate"
+ d_hre_electorate_4: "Imperial Electorate"
+ d_hre_electorate_5: "Bishop Electorate"
+ d_hre_electorate_6: "Bishop Electorate"
+ d_hre_electorate_7: "Bishop Electorate"

@@ -1,0 +1,84 @@
+﻿# Initial holders for the seven electorate duchies at the 1066.9.15 bookmark.
+#
+# Character IDs match vanilla's seat-title holders at the same date — sourced
+# from history/titles/k_bohemia.txt, k_east_francia.txt, k_lotharingia.txt:
+#   522    — holder of d_bohemia          (from 1061.1.1)
+#   1416   — holder of d_angria           (from 1059.6.29)
+#   1316   — holder of d_east_franconia   (from 1056.5.10)
+#   1388   — holder of d_swabia           (from 1057.1.1)
+#   20256  — holder of c_mainz            (from 1059.1.1)
+#   20228  — holder of c_cologne          (from 1056.1.1)
+#   33109  — holder of c_trier            (from 1066.6.1, becomes elector at coronation)
+#
+# 867 bookmark intentionally unhandled — the HRE doesn't exist yet, and our
+# on_action gates the elector_list wiring on title:e_hre.holder existing.
+
+# `liege = e_hre` is required so the titular duchy is a direct vassal of the
+# Emperor. Without it, the duchy has no liege and — for the three bishop
+# holders (c_mainz, c_cologne, c_trier), whose primary title would auto-promote
+# to this tier-3 duchy — the holder gets dragged into independence at start.
+# Tier-3 seat holders (Bohemia, Saxony, Franconia, Swabia) keep their original
+# duchy as primary, but we set liege = e_hre on every entry so a later
+# loss-of-primary doesn't strand them either.
+
+d_hre_electorate_1 = {
+	1066.9.15 = {
+		liege = e_hre
+		holder = 522
+	}
+}
+
+d_hre_electorate_2 = {
+	1066.9.15 = {
+		liege = e_hre
+		holder = 1416
+	}
+}
+
+d_hre_electorate_3 = {
+	1066.9.15 = {
+		liege = e_hre
+		holder = 1316
+	}
+}
+
+d_hre_electorate_4 = {
+	1066.9.15 = {
+		liege = e_hre
+		holder = 1388
+	}
+}
+
+# Electorates 5/6/7 are the three archbishopric seats (Mainz, Cologne, Trier).
+# `government = theocracy_government` keeps the initial holders (and all future
+# holders) as archbishops rather than feudal dukes. Without it, the duchy
+# auto-promotes to the bishop's primary title and — having no government set —
+# defaults to feudal, dragging the character with it (observed at 1066: Anno
+# of Cologne and Udo of Trier lost their theocratic status).
+#
+# Side effect by design: if the Emperor revokes one of these and grants it to
+# a feudal duke, CK3 will convert the new holder to an Elector-Archbishop.
+
+d_hre_electorate_5 = {
+	1066.9.15 = {
+		liege = e_hre
+		government = theocracy_government
+		holder = 20256
+	}
+}
+
+d_hre_electorate_6 = {
+	1066.9.15 = {
+		liege = e_hre
+		government = theocracy_government
+		holder = 20228
+	}
+}
+
+d_hre_electorate_7 = {
+	1066.9.15 = {
+		liege = e_hre
+		government = theocracy_government
+		holder = 33109
+	}
+}
