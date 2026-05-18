@@ -1,0 +1,20 @@
+﻿# Opinion modifier applied to a vassal when the Emperor strips them of their
+# electoral dignity via the strip_elector_interaction
+# (common/character_interactions/hre_overhaul_elector_interactions.txt).
+#
+# Pattern mirrors vanilla's revoked_title opinion modifier — large initial
+# malus, multi-year decaying duration, stacking allowed so repeated insults
+# compound rather than refresh.
+
+stripped_of_electoral_dignity_opinion = {
+	opinion = -50
+	years = 20
+	decaying = yes
+	stacking = yes
+}
+designated_elector_opinion = {
+	opinion = 25
+	years = 10
+	decaying = yes
+	stacking = no
+}

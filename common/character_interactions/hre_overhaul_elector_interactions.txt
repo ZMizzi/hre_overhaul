@@ -86,7 +86,7 @@ strip_elector_interaction = {
 	}
 
 	on_accept = {
-		strip_elector_effect = yes
+		strip_elector_with_consequences_effect = yes
 	}
 
 	on_auto_accept = {
@@ -95,7 +95,7 @@ strip_elector_interaction = {
 				title = strip_elector_notification
 				left_icon = scope:actor
 				show_as_tooltip = {
-					strip_elector_effect = yes
+					strip_elector_with_consequences_effect = yes
 				}
 			}
 		}

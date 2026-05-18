@@ -38,6 +38,16 @@
  strip_elector_interaction_desc: "Strip [recipient.GetTitledFirstName] of their electoral dignity. The seats they hold will be removed from the College of Electors."
  strip_elector_notification: "[actor.GetTitledFirstName] has stripped you of your electoral dignity."
 
+ # Opinion modifier (common/opinion_modifiers/hre_overhaul_elector_opinions.txt).
+ # Display name shown on the character sheet's opinion breakdown.
+ stripped_of_electoral_dignity_opinion: "Stripped Me of Electoral Dignity"
+ designated_elector_opinion: "Designated Me as an Elector"
+
+ # Tooltip shown to AI characters attempting to create k_lotharingia / k_bavaria /
+ # k_burgundy while within the HRE. See
+ # common/landed_titles/hre_overhaul_kingdom_restrictions.txt.
+ hre_overhaul_cannot_create_kingdom_within_hre: 
+
  # ----------------------------------------------------------------------------
  # Notification events — see events/hre_overhaul_elector_events.txt.
  # Sent to the Emperor when a vassal loses prince_elector_flag for non-imperial

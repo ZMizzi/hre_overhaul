@@ -11,6 +11,10 @@ designate_elector_effect = {
 	}
 	scope:recipient = {
 		add_character_flag = prince_elector_flag
+		add_opinion = {
+			target = scope:actor
+			modifier = designated_elector_opinion
+		}
 	}
 	rebuild_hre_elector_cache_effect = yes
 }
@@ -20,6 +24,10 @@ designate_elector_effect = {
 # Removes ALL of their currently-held titles from hre_elector_list (covers the
 # rare case of a vassal holding multiple elector seats), unflags them, and
 # refreshes the title-level tooltip cache.
+#
+# Mechanical only — no political consequences. For the Emperor-initiated path
+# that adds tyranny + opinion penalties, see strip_elector_with_consequences_effect
+# below.
 strip_elector_effect = {
 	scope:recipient = {
 		every_held_title = {
@@ -31,6 +39,40 @@ strip_elector_effect = {
 		remove_character_flag = prince_elector_flag
 	}
 	rebuild_hre_elector_cache_effect = yes
+}
+
+
+# Strip electoral dignity AND apply the political price for doing so.
+# Called from strip_elector_interaction on_accept.
+#
+# Opinion: always applied — the stripped vassal resents the slight regardless
+# of cause, mirroring vanilla's revoked_title opinion in
+# common/character_interactions/00_revoke_title_interaction.txt:695-700.
+#
+# Tyranny: gated on `has_revoke_title_reason`. If the Emperor holds a
+# legitimate grievance against the vassal (hook, crime, etc.) the strip is
+# considered justified — no tyranny, but the reason is consumed (one-shot,
+# matching vanilla's consume_revoke_title_reason pattern in
+# common/scripted_effects/00_interaction_effects.txt:1006).
+strip_elector_with_consequences_effect = {
+	strip_elector_effect = yes
+
+	scope:recipient = {
+		add_opinion = {
+			target = scope:actor
+			modifier = stripped_of_electoral_dignity_opinion
+		}
+	}
+
+	scope:actor = {
+		if = {
+			limit = { has_revoke_title_reason = scope:recipient }
+			consume_revoke_title_reason = scope:recipient
+		}
+		else = {
+			add_tyranny = 25
+		}
+	}
 }
 
 

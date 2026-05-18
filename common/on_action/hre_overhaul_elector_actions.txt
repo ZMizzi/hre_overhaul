@@ -181,7 +181,12 @@ on_vassal_change = {
 #   1. Sub-vassal acquires direct-HRE-vassal status while still holding an
 #      elector seat → flag should now be added.
 #   2. Direct HRE vassal becomes a sub-vassal (or independent) while holding
-#      an elector seat → flag should be removed.
+#      an elector seat → flag should be removed AND the seat itself is
+#      forfeited from hre_elector_list. The Emperor must designate a
+#      replacement to refill the College slot. Unlike on_title_lost (where the
+#      seat persists so the new holder inherits the dignity), losing direct
+#      vassalage strips both the character AND the title — Reichsunmittelbarkeit
+#      is a precondition for the seat, not just the holder.
 # Non-electors hit the else_if branch and are no-ops if they don't already
 # have the flag.
 hre_overhaul_elector_vassal_change_action = {
@@ -199,6 +204,15 @@ hre_overhaul_elector_vassal_change_action = {
 		else_if = {
 			limit = { has_character_flag = prince_elector_flag }
 			remove_character_flag = prince_elector_flag
+			# Strip every electorate seat the character still holds — the seat
+			# follows the character out of the College.
+			every_held_title = {
+				limit = {
+					is_target_in_global_variable_list = { name = hre_elector_list target = this }
+				}
+				remove_list_global_variable = { name = hre_elector_list target = this }
+			}
+			rebuild_hre_elector_cache_effect = yes
 			notify_emperor_elector_lost_effect = {
 				EVENT = hre_overhaul_elector.0002
 			}

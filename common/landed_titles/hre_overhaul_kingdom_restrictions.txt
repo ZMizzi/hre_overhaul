@@ -1,0 +1,283 @@
+﻿@better_than_the_alternatives_score = 50
+@correct_culture_primary_score = 100
+
+# Partial landed_titles overrides for kingdoms inside the HRE.
+#
+# CK3 landed_titles overlay behavior, learned the hard way:
+#
+#   1. Nested titles MERGE across files — vanilla's children of a partially-
+#      declared parent are preserved without us re-declaring them.
+#   2. Top-level scalar fields on a title (color, capital, ai_primary_priority,
+#      etc.) DO NOT merge — the mod's declaration replaces vanilla's. Any
+#      field omitted gets dropped/defaulted.
+#   3. The FILE STRUCTURE itself encodes de jure hierarchy. Declaring a
+#      kingdom at top level disconnects it from its vanilla parent empire's
+#      de jure tree. We discovered this when our first attempt (k_lotharingia
+#      etc. at file root) caused k_saxony and k_frisia to claim de jure
+#      territory at 1066 — the disrupted e_germany hierarchy cascaded.
+#
+# Consequence: to add a can_create to a kingdom nested inside an empire, we
+# must restate the empire AND every top-level scalar of both empire and
+# kingdom, while leaving nested duchies for vanilla to merge in.
+#
+# Vanilla constants `@better_than_the_alternatives_score` (= 50) and
+# `@correct_culture_primary_score` (= 100) are redeclared at the top of this
+# file — script constants are file-scoped in landed_titles.
+#
+# Vanilla already restricts k_east_francia ("Germany") at
+# common/landed_titles/00_landed_titles.txt:6946 with a similar rule — that
+# kingdom is left alone.
+#
+# Our rule: if the HRE exists and the would-be creator's top liege is the
+# Emperor, the kingdom cannot be created. Applies to player and AI alike.
+# Restate the limit/condition verbatim across all three kingdoms.
+
+
+e_germany = {
+	color = { 190 200 190 }
+	capital = c_nassau
+
+	can_create = {
+		custom_description = {
+			text = form_germania_christian_trigger
+			NOT = {
+				faith = {
+					religion_tag = christianity_religion
+					has_doctrine = doctrine_spiritual_head
+				}
+			}
+		}
+		rule_title_creation_imperial_power_projection_title_creation_trigger = yes
+	}
+
+	ai_primary_priority = {
+		if = {
+			limit = {
+				culture = { has_cultural_pillar = heritage_central_germanic }
+			}
+			add = @correct_culture_primary_score
+		}
+	}
+
+	k_lotharingia = {
+		color = { 110 110 160 }
+		capital = c_luxembourg
+
+		ai_primary_priority = {
+			if = {
+				limit = {
+					culture = { has_cultural_pillar = heritage_central_germanic }
+				}
+				add = @better_than_the_alternatives_score
+			}
+			if = {
+				limit = {
+					OR = {
+						culture = culture:french
+						culture = culture:norman
+						culture = culture:occitan
+					}
+				}
+				add = @better_than_the_alternatives_score
+			}
+		}
+
+		can_create = {
+			trigger_if = {
+				limit = {
+					exists = title:e_hre.holder
+					top_liege = title:e_hre.holder
+					NOT = { this = title:e_hre.holder }
+				}
+				custom_tooltip = {
+					text = hre_overhaul_cannot_create_kingdom_within_hre
+					always = no
+				}
+			}
+		}
+	}
+
+	k_bavaria = {
+		color = { 70 80 80 }
+		capital = c_regensburg
+
+		ai_primary_priority = {
+			if = {
+				limit = {
+					culture = { has_cultural_pillar = heritage_central_germanic }
+				}
+				add = @better_than_the_alternatives_score
+			}
+		}
+
+		can_create = {
+			trigger_if = {
+				limit = {
+					exists = title:e_hre.holder
+					top_liege = title:e_hre.holder
+					NOT = { this = title:e_hre.holder }
+				}
+				custom_tooltip = {
+					text = hre_overhaul_cannot_create_kingdom_within_hre
+					always = no
+				}
+			}
+		}
+	}
+
+	# k_east_francia ("Germany"): vanilla already blocks AI from creating while
+	# e_hre exists. We keep that check and stack our HRE-vassal block on top,
+	# so a player within the HRE is also blocked. Both trigger_ifs must pass
+	# for can_create to succeed.
+	k_east_francia = {
+		color = { 160 160 160 }
+		capital = c_frankfurt
+
+		ai_primary_priority = {
+			if = {
+				limit = {
+					culture = culture:franconian
+				}
+				add = @correct_culture_primary_score
+			}
+			if = {
+				limit = {
+					NOT = { culture = culture:franconian }
+					culture = { has_cultural_pillar = heritage_central_germanic }
+				}
+				add = @better_than_the_alternatives_score
+			}
+		}
+
+		can_create = {
+			trigger_if = {
+				limit = { is_ai = yes }
+				NOT = { exists = title:e_hre }
+			}
+			trigger_if = {
+				limit = {
+					exists = title:e_hre.holder
+					top_liege = title:e_hre.holder
+					NOT = { this = title:e_hre.holder }
+				}
+				custom_tooltip = {
+					text = hre_overhaul_cannot_create_kingdom_within_hre
+					always = no
+				}
+			}
+		}
+	}
+}
+
+e_france = {
+	color = { 11 22 170 }
+	capital = c_ile_de_france
+
+	can_create = {
+		rule_title_creation_imperial_power_projection_title_creation_trigger = yes
+	}
+
+	ai_primary_priority = {
+		if = {
+			limit = {
+				culture = culture:french
+			}
+			add = @correct_culture_primary_score
+		}
+		if = {
+			limit = {
+				OR = {
+					culture = culture:norman
+					culture = culture:occitan
+				}
+			}
+			add = @better_than_the_alternatives_score
+		}
+	}
+
+	k_burgundy = {
+		color = { 134 0 37 }
+		capital = c_venaissin
+
+		ai_primary_priority = {
+			if = {
+				limit = {
+					OR = {
+						culture = culture:french
+						culture = culture:norman
+						culture = culture:occitan
+					}
+				}
+				add = @better_than_the_alternatives_score
+			}
+		}
+
+		can_create = {
+			trigger_if = {
+				limit = {
+					exists = title:e_hre.holder
+					top_liege = title:e_hre.holder
+					NOT = { this = title:e_hre.holder }
+				}
+				custom_tooltip = {
+					text = hre_overhaul_cannot_create_kingdom_within_hre
+					always = no
+				}
+			}
+		}
+	}
+}
+
+# e_italy (Italy as an empire). k_italy is nested here in vanilla, so we
+# restate the empire wrapper with all its scalar fields preserved.
+e_italy = {
+	color = { 234 217 110 }
+	capital = c_roma
+
+	can_create = {
+		rule_title_creation_imperial_power_projection_title_creation_trigger = yes
+	}
+
+	ai_primary_priority = {
+		if = {
+			limit = {
+				culture = culture:italian
+			}
+			add = @correct_culture_primary_score
+		}
+	}
+
+	# k_italy: vanilla restricts AI to Christian faiths only. We keep that
+	# check and stack our HRE-vassal block on top.
+	k_italy = {
+		color = { 244 227 160 }
+		capital = c_lombardia
+
+		ai_primary_priority = {
+			if = {
+				limit = {
+					culture = culture:italian
+				}
+				add = @correct_culture_primary_score
+			}
+		}
+
+		can_create = {
+			trigger_if = {
+				limit = { is_ai = yes }
+				faith = { religion_tag = christianity_religion }
+			}
+			trigger_if = {
+				limit = {
+					exists = title:e_hre.holder
+					top_liege = title:e_hre.holder
+					NOT = { this = title:e_hre.holder }
+				}
+				custom_tooltip = {
+					text = hre_overhaul_cannot_create_kingdom_within_hre
+					always = no
+				}
+			}
+		}
+	}
+}
