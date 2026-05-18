@@ -24,6 +24,7 @@ designate_elector_interaction = {
 		# Recipient must be a direct vassal of the Emperor.
 		scope:recipient = {
 			liege = scope:actor
+			highest_held_title_tier >= tier_county
 		}
 	}
 

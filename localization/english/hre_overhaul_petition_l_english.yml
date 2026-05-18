@@ -1,0 +1,68 @@
+﻿l_english:
+ # ----------------------------------------------------------------------------
+ # Decision — common/decisions/hre_overhaul_petition_decisions.txt
+ # ----------------------------------------------------------------------------
+ hre_overhaul_petition_kaiser_decision: "Request Electoral Dignity from the Kaiser"
+ hre_overhaul_petition_kaiser_decision_desc: "Make the journey to the Imperial court and lay a formal request before the Kaiser. A long-standing privilege of the Empire's vassals — though the Kaiser is under no obligation to grant what is asked."
+ hre_overhaul_petition_kaiser_decision_tooltip: "Travel to the Kaiser's capital and request a boon. The Kaiser will decide whether to receive you, and what to grant."
+ hre_overhaul_petition_kaiser_decision_effects: "You will travel to the Kaiser's capital and present your petition. The outcome rests with the Kaiser."
+ hre_overhaul_petition_kaiser_decision_confirm: "Set out for the Imperial court"
+
+ hre_overhaul_petition_costs_refunded: "Petition Costs Refunded"
+
+ # Widget item — Electoral Dignity option.
+ hre_overhaul_petition_decision_option_electoral_dignity: "Request Electoral Dignity"
+ hre_petition_electoral_dignity_desc: "Petition the Kaiser to elevate your primary title to the College of Electors."
+
+ hre_petition_electoral_dignity_not_on_cooldown_tt: "You have not recently petitioned for Electoral Dignity"
+ hre_petition_electoral_dignity_not_already_elector_tt: "You are not already a Prince-Elector"
+ hre_petition_electoral_dignity_primary_not_in_list_tt: "Your primary title is not already an electorate"
+ hre_petition_electoral_dignity_tier_tt: "Your primary title is at least a Duchy"
+
+ # ----------------------------------------------------------------------------
+ # Event chain — events/hre_overhaul_petition_events.txt
+ # ----------------------------------------------------------------------------
+ # .0001 — Letter to Kaiser
+ hre_overhaul_petition.0001.opening: "Your Imperial Majesty,"
+ hre_overhaul_petition.0001.desc: "[petition_vassal.GetTitledFirstName] of [petition_vassal.GetPrimaryTitle.GetNameNoTierNoTooltip] has traveled to Our court bearing a formal petition. Per ancient privilege, We must decide whether to hear them out — or send them home unheeded."
+ hre_overhaul_petition.0001.a: "Receive them"
+ hre_overhaul_petition.0001.a.tt: "Hear out [petition_vassal.GetTitledFirstName]'s petition."
+ hre_overhaul_petition.0001.b: "Turn them away"
+ hre_overhaul_petition.0001.b.arrogant: "Beneath Our notice"
+ hre_overhaul_petition.0001.b.humble: "I have not the patience today"
+ hre_overhaul_petition.0001.b.tt: "Refuse [petition_vassal.GetTitledFirstName] an audience. They will return home empty-handed, and resent the slight."
+
+ # .0009 — Refused to hear (letter to vassal)
+ hre_overhaul_petition.0009.opening: "[petition_vassal.GetTitledFirstName],"
+ hre_overhaul_petition.0009.desc: "Word reaches you from the Imperial court: the Kaiser has refused to receive you. The long journey was for nothing — your petition will not even be heard."
+ hre_overhaul_petition.0009.a: "An insult I shall not soon forget."
+
+ # .0101 — Court audience
+ hre_overhaul_petition.0101.t: "A Petitioner at Court"
+ hre_overhaul_petition.0101.desc: "[petition_vassal.GetTitledFirstName] of [petition_vassal.GetPrimaryTitle.GetNameNoTierNoTooltip] stands before Us, having traveled far to lay their request at the foot of the Imperial throne."
+ hre_overhaul_petition.0101.desc.electoral_dignity: "\n\nThey petition for the gravest of all favors: that their primary title, [petition_vassal.GetPrimaryTitle.GetNameNoTierNoTooltip], be raised to a seat in the College of Electors. Such an elevation cannot be undone lightly; the dignity passes with the title to all who hold it hereafter. To grant this is to permanently widen the circle of those who choose Our successors. To refuse is to send a powerful vassal home aggrieved."
+ hre_overhaul_petition.0101.a.grant: "Grant them the dignity"
+ hre_overhaul_petition.0101.a.grant.tt: "Elevate [petition_vassal.GetPrimaryTitle.GetNameNoTierNoTooltip] to the College of Electors. [petition_vassal.GetTitledFirstName] will leave Our court an Elector."
+ hre_overhaul_petition.0101.b.refuse: "Refuse the petition"
+ hre_overhaul_petition.0101.b.refuse.tt: "Send [petition_vassal.GetTitledFirstName] home empty-handed. They will resent Us for the snub."
+
+ # .0201 — Grant (court event on the vassal: throne-room scene)
+ hre_overhaul_petition.0201.t: "An Elector Made"
+ hre_overhaul_petition.0201.desc: "I kneel before the Imperial throne as the Kaiser pronounces judgement on my petition.\n\nBy the grace of His Imperial Majesty, my plea has been granted. From this day forth, [petition_vassal.GetPrimaryTitle.GetNameNoTierNoTooltip] is counted among the electorates of the Empire, and I sit in the College of Electors that chooses the Kaiser. May my line prove worthy of the dignity."
+ hre_overhaul_petition.0201.a: "A solemn honor."
+
+ # .0209 — Refuse (court event on the vassal: throne-room scene)
+ hre_overhaul_petition.0209.t: "The Kaiser Refuses"
+ hre_overhaul_petition.0209.desc: "I kneel before the Imperial throne as the Kaiser pronounces judgement on my petition.\n\nThe Kaiser has weighed my request and refused it. [petition_vassal.GetPrimaryTitle.GetNameNoTierNoTooltip] will not be raised to the College. The journey home will be a long one."
+ hre_overhaul_petition.0209.a: "I shall not forget this."
+
+ # .0601 — Invalidation
+ hre_overhaul_petition.0601.t: "The Petition Comes to Nothing"
+ hre_overhaul_petition.0601.desc: "Circumstances have overtaken the petition you set out to make. There is no longer a Kaiser at the Imperial court to receive it, or the conditions that made the request meaningful have changed. Your costs have been refunded — but the journey was for nothing."
+ hre_overhaul_petition.0601.a: "So be it."
+
+ # ----------------------------------------------------------------------------
+ # Opinion modifiers — common/opinion_modifiers/hre_overhaul_elector_opinions.txt
+ # ----------------------------------------------------------------------------
+ refused_audience_opinion: "Refused to Hear My Petition"
+ refused_electoral_dignity_opinion: "Refused My Electoral Petition"

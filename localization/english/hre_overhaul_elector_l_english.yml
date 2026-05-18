@@ -46,7 +46,7 @@
  # Tooltip shown to AI characters attempting to create k_lotharingia / k_bavaria /
  # k_burgundy while within the HRE. See
  # common/landed_titles/hre_overhaul_kingdom_restrictions.txt.
- hre_overhaul_cannot_create_kingdom_within_hre: 
+ hre_overhaul_cannot_create_kingdom_within_hre: "Vassals cannot create kingdoms within the historic HRE. Only the Emperor may create them."
 
  # ----------------------------------------------------------------------------
  # Notification events — see events/hre_overhaul_elector_events.txt.

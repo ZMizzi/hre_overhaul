@@ -1,0 +1,160 @@
+﻿# HRE-Overhaul Petition Framework.
+#
+# A standalone parallel to vanilla's petition_liege_decision
+# (30_activity_decisions.txt:91), specialized to the Emperor and intended as
+# the entry point for all HRE-overhaul vassal -> Kaiser petitions. Built as a
+# framework rather than a one-off so future options (e.g., petition for de
+# jure adjustment, dynasty privileges, etc.) can be added as additional
+# widget items without touching event plumbing.
+#
+# Why standalone rather than overwriting petition_liege_decision: vanilla's
+# decision is ~860 lines of hard-coded widget items. Cloning it to add one
+# option means re-syncing on every CK3 patch. A separate decision sidesteps
+# that maintenance burden and avoids conflicts with any other mod that
+# touches petition_liege_decision.
+#
+# Mechanical mirror of vanilla:
+#   - Widget-based menu (decision_view_widget_petition_liege GUI reused)
+#   - Player picks an option, scope variable gets set on selection
+#   - Switch in effect{} writes hre_petition_type variable
+#   - start_travel_plan sends vassal to Emperor's capital
+#   - on_arrival fires hre_overhaul_petition.9000 (validation)
+#   - 9000 fires .0001 (letter to Kaiser) -> .0101 (audience) -> resolution
+#
+# Scope idiom:
+#   scope:petition_vassal  = the petitioner (matches vanilla convention)
+#   scope:petition_kaiser  = title:e_hre.holder (the Emperor)
+#   var:hre_petition_type  = which option was chosen (flag-typed)
+#
+# Variable/flag namespacing uses hre_petition_* (not bare petition_*) so a
+# vanilla petition in flight from the same vassal can coexist without state
+# clobbering.
+
+hre_overhaul_petition_kaiser_decision = {
+	ai_check_interval = 0
+	sort_order = 195
+
+	desc = hre_overhaul_petition_kaiser_decision_desc
+	selection_tooltip = hre_overhaul_petition_kaiser_decision_tooltip
+
+	picture = {
+		reference = "gfx/interface/illustrations/decisions/decision_knight_kneeling.dds"
+	}
+
+	# Same prestige cost as vanilla petition_liege_decision — petitioning the
+	# Emperor is a major social undertaking regardless of the specific ask.
+	cost = {
+		prestige = {
+			value = standard_activity_base_cost
+		}
+	}
+
+	# Decision-level cooldown is short (1 year). Per-petition-type cooldowns
+	# are enforced separately via character flags inside the widget items'
+	# is_valid (see hre_petition_electoral_dignity_cooldown_flag below), so
+	# the player isn't blocked from attempting a different petition type just
+	# because they recently tried electoral dignity.
+	cooldown = {
+		years = 1
+	}
+
+	is_shown = {
+		is_playable_character = yes
+		# Must be a direct vassal of the Emperor — petition is between vassal
+		# and Kaiser, not vassal and intermediate liege.
+		exists = title:e_hre.holder
+		liege = title:e_hre.holder
+		liege ?= { has_royal_court = yes }
+		has_dlc_feature = royal_court
+		NOT = { has_character_flag = prince_elector_flag }
+	}
+
+	is_valid = {
+		exists = liege
+	}
+
+	is_valid_showing_failures_only = {
+		is_available_adult = yes
+		title:e_hre.holder ?= { is_available_adult = yes }
+		is_at_war_with_liege = no
+		trigger_if = {
+			limit = {
+				is_ai = no
+				has_royal_court = yes
+			}
+			has_spawned_court_events = no
+		}
+		# At least one petition option must be currently valid for the menu
+		# to be meaningful. As more options are added, OR them here.
+		trigger_if = {
+			limit = { scope:hre_petition_electoral_dignity = yes }
+		}
+	}
+
+	widget = {
+		gui = "decision_view_widget_petition_liege"
+		controller = decision_option_list_controller
+		decision_to_second_step_button = "CHOOSE_PETITION_DECISION_NEXT_STEP_BUTTON"
+
+		item = {
+			value = hre_petition_electoral_dignity
+			is_shown = {
+				hre_petition_electoral_dignity_is_shown_trigger = yes
+			}
+			is_valid = {
+				custom_tooltip = {
+					text = hre_petition_electoral_dignity_not_on_cooldown_tt
+					NOT = { has_character_flag = hre_petition_electoral_dignity_cooldown_flag }
+				}
+				custom_tooltip = {
+					text = hre_petition_electoral_dignity_not_already_elector_tt
+					NOT = { has_character_flag = prince_elector_flag }
+				}
+				custom_tooltip = {
+					text = hre_petition_electoral_dignity_primary_not_in_list_tt
+					primary_title = {
+						NOT = {
+							is_target_in_global_variable_list = { name = hre_elector_list target = this }
+						}
+					}
+				}
+				custom_tooltip = {
+					text = hre_petition_electoral_dignity_tier_tt
+					primary_title.tier >= tier_duchy
+				}
+			}
+			current_description = hre_petition_electoral_dignity_desc
+			localization = hre_overhaul_petition_decision_option_electoral_dignity
+			icon = "gfx/interface/icons/message_feed/titles.dds"
+			ai_chance = { value = 0 } # AI never takes this decision; only player.
+		}
+	}
+
+	effect = {
+		custom_tooltip = hre_overhaul_petition_kaiser_decision_effects
+		switch = {
+			trigger = yes
+			scope:hre_petition_electoral_dignity = {
+				set_variable = { name = hre_petition_type value = flag:electoral_dignity }
+			}
+		}
+		if = {
+			limit = { location = title:e_hre.holder.capital_province }
+			trigger_event = { on_action = hre_overhaul_petition_start }
+			trigger_event = hre_overhaul_petition.9000
+		}
+		else = {
+			start_travel_plan = {
+				destination = title:e_hre.holder.capital_province
+				on_start_on_action = hre_overhaul_petition_start
+				on_travel_planner_cancel_on_action = hre_overhaul_petition_travel_planner_exit
+				on_arrival_event = hre_overhaul_petition.9000
+				on_arrival_destinations = all_but_last
+			}
+		}
+	}
+
+	ai_potential = {
+		always = no # Players only — AI never initiates this petition.
+	}
+}

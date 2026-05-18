@@ -1,0 +1,71 @@
+﻿# Triggers for the HRE-Overhaul petition framework.
+#
+# Two kinds live in this file:
+#   - *_is_shown_trigger  : menu-item visibility filters (cheap, used in widget)
+#   - *_ai_accept_trigger : NOT a true trigger — implemented as a scripted
+#                           weight calculation inside the relevant event's
+#                           option ai_chance. See hre_overhaul_petition_events.txt
+#                           for the actual ai_chance weighting (vanilla's
+#                           pattern at petition_liege.0101:1864-2020).
+#
+# Why no separate scripted_trigger for ai_accept: AI acceptance is a *weighted*
+# decision, not a boolean trigger. CK3's ai_chance block lives inside event
+# options and computes a final number; this is the right place for "accumulate
+# many small modifiers" logic. Putting a hard yes/no scripted_trigger here
+# would force binary outcomes and lose the texture the design calls for
+# (build receptiveness over generations, never a sure thing).
+
+
+# ============================================================================
+# Electoral Dignity petition — menu visibility
+# ============================================================================
+# Used by the widget item is_shown in hre_overhaul_petition_kaiser_decision.
+# Cheap gating only — these decide whether the option appears in the petition
+# menu at all. Heavier validation (cooldown, already-elector, primary-in-list,
+# tier) is in the widget item's is_valid so the player sees a tooltip
+# explaining why the option is greyed out rather than the option silently
+# vanishing.
+#
+# Root = the petitioning vassal.
+hre_petition_electoral_dignity_is_shown_trigger = {
+	# Direct vassal of the Emperor. Sub-vassals can't be electors anyway
+	# (prince_elector_flag requires liege = title:e_hre.holder per
+	# common/on_action/hre_overhaul_elector_actions.txt:39-44), so there's no
+	# point showing the option to them.
+	exists = title:e_hre.holder
+	liege = title:e_hre.holder
+	# Holds at least a duchy. Counts can be electors in vanilla (Mainz,
+	# Cologne, Trier, etc.) but those are seeded historically; we don't want
+	# every random imperial count petitioning for inclusion.
+	primary_title.tier >= tier_duchy
+	# Not already an elector — no point petitioning for what you already have.
+	NOT = { has_character_flag = prince_elector_flag }
+}
+
+
+# ============================================================================
+# Petition validity (mid-flow)
+# ============================================================================
+# Used by the on_action routers (0101, 0201, 0209) to confirm the petition
+# is still meaningful before firing the next event. If either party is dead
+# or imprisoned, the petition gets routed to .0601 (invalidation) instead.
+#
+# Called in `root` scope of whichever side is firing the on_action. We don't
+# care which — both scope:petition_vassal and scope:petition_kaiser must be
+# valid for the petition to proceed regardless.
+hre_overhaul_petition_valid_trigger = {
+	exists = scope:petition_vassal
+	exists = scope:petition_kaiser
+	scope:petition_vassal = {
+		is_alive = yes
+		is_imprisoned = no
+	}
+	scope:petition_kaiser = {
+		is_alive = yes
+		is_imprisoned = no
+	}
+	# Emperor still holds the throne. If they were deposed mid-petition the
+	# whole interaction loses meaning.
+	exists = title:e_hre.holder
+	scope:petition_kaiser = title:e_hre.holder
+}

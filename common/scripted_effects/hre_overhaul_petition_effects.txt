@@ -1,0 +1,99 @@
+﻿# Effects for the HRE-Overhaul petition framework.
+#
+# Two layers:
+#   - Framework-level (cleanup, scope-remapping) — applies to all petitions.
+#   - Petition-specific (grant_electoral_dignity, refuse_electoral_dignity)
+#     — encapsulates each option's success/failure resolution.
+#
+# As new petition options are added, add their grant/refuse effects to this
+# file rather than embedding them inline in events. Keeps event option blocks
+# readable and lets future options chain shared effects (e.g., applying a
+# uniform "Kaiser grants favor" prestige nudge across all petition types).
+
+
+# ============================================================================
+# Framework-level
+# ============================================================================
+
+# Strip scratch vars and the active-petition flag the petition_start effect
+# set up. Called on any terminal branch — grant, refuse, ghost, cancel,
+# invalidation — so the petitioner is in a clean state for the next attempt.
+# Lives on the petitioner (root) and the petition vassal scope.
+hre_overhaul_petition_cleanup_vars_effect = {
+	if = {
+		limit = { has_variable = hre_petition_kaiser_scope }
+		remove_variable = hre_petition_kaiser_scope
+	}
+	if = {
+		limit = { has_variable = hre_petition_type }
+		remove_variable = hre_petition_type
+	}
+	if = {
+		limit = { has_character_flag = hre_overhaul_petition_active_flag }
+		remove_character_flag = hre_overhaul_petition_active_flag
+	}
+}
+
+
+# ============================================================================
+# Petition option: Electoral Dignity
+# ============================================================================
+
+# Success branch. Fired from .0201 option after the Kaiser grants the
+# petition.
+#
+# Bridges the petition scope idiom (scope:petition_vassal, scope:petition_kaiser)
+# to the elector-interaction scope idiom (scope:recipient, scope:actor) so
+# we can reuse the existing designate_elector_effect verbatim. Avoids drift
+# between the two paths that would let designation-by-emperor and
+# designation-by-petition diverge over time.
+#
+# Caller scope: ROOT = the petitioning vassal (scope:petition_vassal).
+hre_overhaul_petition_grant_electoral_dignity_effect = {
+	# Remap scopes for designate_elector_effect.
+	# scope:recipient = the new elector (the petitioner)
+	# scope:actor     = the Kaiser doing the granting
+	save_scope_as = recipient
+	scope:petition_kaiser = { save_scope_as = actor }
+
+	designate_elector_effect = yes
+
+	# Per-type cooldown — successful petitioner can't immediately petition
+	# again on behalf of, e.g., a second held duchy. Long-duration timed flag
+	# matches the design doc's "multi-generational ambition" framing even on
+	# success (the dignity is granted, no need to re-grind that path).
+	add_character_flag = {
+		flag = hre_petition_electoral_dignity_cooldown_flag
+		years = 50
+	}
+
+	# Emperor pays a small prestige cost for granting. Makes AI emperors
+	# weigh acceptance non-trivially and gives mechanical bite to the design
+	# concern that "more electors = less imperial control."
+	scope:petition_kaiser = {
+		add_prestige = -100
+	}
+
+	hre_overhaul_petition_cleanup_vars_effect = yes
+}
+
+
+# Failure branch. Fired from .0209 option after the Kaiser refuses.
+# Opinion hit + long cooldown flag so the petitioner can't just spam the
+# attempt every year. Cooldown is shorter than the success-side flag — a
+# refused petitioner should plausibly try again with a new generation, a new
+# emperor, or a strengthened position.
+#
+# Caller scope: ROOT = the petitioning vassal (scope:petition_vassal).
+hre_overhaul_petition_refuse_electoral_dignity_effect = {
+	add_opinion = {
+		target = scope:petition_kaiser
+		modifier = refused_electoral_dignity_opinion
+	}
+	add_character_flag = {
+		flag = hre_petition_electoral_dignity_cooldown_flag
+		years = 15
+	}
+
+	hre_overhaul_petition_cleanup_vars_effect = yes
+}

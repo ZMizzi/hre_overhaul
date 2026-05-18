@@ -18,3 +18,29 @@ designated_elector_opinion = {
 	decaying = yes
 	stacking = no
 }
+
+# Opinion modifiers used by the HRE-Overhaul petition framework
+# (events/hre_overhaul_petition_events.txt).
+#
+# refused_audience: smaller and shorter than refused_electoral_dignity — the
+# Kaiser dismissed the vassal at the door without hearing them out. Stings,
+# but less than being heard, considered, and rejected.
+#
+# refused_electoral_dignity: substantial and long. The Kaiser heard the
+# vassal's full case and refused — much more pointed snub. Paired with the
+# 15-year cooldown flag on retry so the resentment hasn't fully decayed by
+# the time the next petition is possible.
+
+refused_audience_opinion = {
+	opinion = -10
+	years = 5
+	decaying = yes
+	stacking = no
+}
+
+refused_electoral_dignity_opinion = {
+	opinion = -25
+	years = 15
+	decaying = yes
+	stacking = yes
+}

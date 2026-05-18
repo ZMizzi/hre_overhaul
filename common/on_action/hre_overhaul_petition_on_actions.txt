@@ -1,0 +1,120 @@
+﻿# On-actions for the HRE-Overhaul petition framework.
+#
+# Naming and structure mirrors vanilla's petition_liege on-actions at
+# common/on_action/dlc/ep1/ep1_petition_liege_on_actions.txt so anyone
+# familiar with the vanilla pattern can read this immediately.
+#
+# These are referenced as `on_action = ...` from inside trigger_event{} or
+# start_travel_plan{} blocks — they're not on_action hooks fired by the game
+# engine, just named effect bundles the petition flow routes through.
+
+
+# Fired when the vassal starts the petition (either immediately on selecting
+# the decision while at the Kaiser's court, or on travel start).
+# Sets up the bookkeeping vars that downstream events read.
+hre_overhaul_petition_start = {
+	effect = {
+		add_character_flag = hre_overhaul_petition_active_flag
+		set_variable = {
+			name = hre_petition_kaiser_scope
+			value = title:e_hre.holder
+		}
+		# Mirror vanilla's stress nudge — shy/arrogant petitioners find this
+		# kind of supplication taxing.
+		switch = {
+			trigger = has_trait
+			shy = { add_stress = medium_stress_impact_gain }
+			arrogant = { add_stress = medium_stress_impact_gain }
+		}
+	}
+}
+
+
+# Fired if the player cancels travel mid-route. Refund the prestige cost,
+# remove the decision cooldown, and clean up the scratch vars/flag so the
+# player can try again immediately.
+hre_overhaul_petition_travel_planner_exit = {
+	effect = {
+		send_interface_toast = {
+			type = event_toast_effect_neutral
+			title = hre_overhaul_petition_costs_refunded
+			left_icon = root
+			remove_decision_cooldown = hre_overhaul_petition_kaiser_decision
+			add_prestige_no_experience = standard_activity_base_cost
+		}
+		hre_overhaul_petition_cleanup_vars_effect = yes
+	}
+}
+
+
+# Routed from inside .0001 (when the Kaiser opts to hear the petition).
+# Fires the audience event .0101 only if both parties are still in a state
+# to participate; otherwise short-circuits to the invalidation event .0601.
+hre_overhaul_petition_0101 = {
+	effect = {
+		if = {
+			limit = {
+				scope:petition_kaiser = {
+					is_alive = yes
+					is_imprisoned = no
+				}
+				scope:petition_vassal = {
+					is_alive = yes
+					is_imprisoned = no
+				}
+			}
+			trigger_event = hre_overhaul_petition.0101
+		}
+		else = {
+			trigger_event = hre_overhaul_petition.0601
+		}
+	}
+}
+
+
+# Routed from .0101 when the Kaiser grants the petition. Fires .0201 (grant
+# notification + designation effect) on the vassal.
+hre_overhaul_petition_0201 = {
+	effect = {
+		if = {
+			limit = { hre_overhaul_petition_valid_trigger = yes }
+			scope:petition_vassal = {
+				trigger_event = { id = hre_overhaul_petition.0201 }
+			}
+		}
+		else = {
+			trigger_event = hre_overhaul_petition.0601
+		}
+	}
+}
+
+
+# Routed from .0101 when the Kaiser refuses. Fires .0209 (refusal notification
+# + opinion penalty + per-type cooldown flag) on the vassal.
+hre_overhaul_petition_0209 = {
+	effect = {
+		if = {
+			limit = { hre_overhaul_petition_valid_trigger = yes }
+			scope:petition_vassal = {
+				trigger_event = { id = hre_overhaul_petition.0209 }
+			}
+		}
+		else = {
+			trigger_event = hre_overhaul_petition.0601
+		}
+	}
+}
+
+
+# Fallback if the Kaiser ghosts the petition (event 0001 never resolves
+# within 30 days). Scheduled by .9000 alongside the letter to the Kaiser;
+# fires .0009 (refused-to-hear) on the vassal if state still indicates an
+# active petition.
+hre_overhaul_petition_ghosted = {
+	effect = {
+		if = {
+			limit = { has_variable = hre_petition_kaiser_scope }
+			trigger_event = hre_overhaul_petition.0009
+		}
+	}
+}

@@ -1,0 +1,501 @@
+﻿namespace = hre_overhaul_petition
+
+# HRE-Overhaul petition event chain.
+#
+# Numbering mirrors vanilla petition_liege so the flow reads identically:
+#   9000 -> arrival validation (vassal scope, hidden, routes to .0001 or .0601)
+#   0001 -> letter to Kaiser; Kaiser picks "hear out" or "turn away"
+#   0009 -> letter to vassal: Kaiser refused to hear
+#   0101 -> court audience on the Kaiser; ai_chance lives here on the grant
+#           option. This is the gate that hides the actual acceptance logic
+#           from the player (per design: no checklist; player has to try, fail,
+#           build up, try again).
+#   0201 -> letter to vassal: petition granted; applies the elector designation
+#   0209 -> letter to vassal: petition refused; applies opinion + cooldown
+#   0601 -> invalidation (Kaiser died, deposed, etc. between travel and arrival)
+#
+# Scope idiom throughout (set up by .9000):
+#   scope:petition_vassal = the petitioner
+#   scope:petition_kaiser = the Emperor
+#   var:hre_petition_type = flag identifying which petition option was chosen
+
+
+# ============================================================================
+# .9000 — Arrival validation
+# ============================================================================
+# Hidden bookkeeping event. Fires on the vassal when they arrive at the
+# Kaiser's capital (or immediately if they started the decision while already
+# there). Saves the scope vars and decides whether to proceed with the letter
+# to the Kaiser (.0001) or short-circuit to invalidation (.0601).
+#
+# Root scope: petitioning vassal.
+hre_overhaul_petition.9000 = {
+	hidden = yes
+	immediate = {
+		save_scope_as = petition_vassal
+		title:e_hre.holder ?= { save_scope_as = petition_kaiser }
+
+		if = {
+			limit = {
+				OR = {
+					NOT = { exists = scope:petition_kaiser }
+					scope:petition_kaiser = {
+						OR = {
+							is_imprisoned = yes
+							is_alive = no
+						}
+					}
+				}
+			}
+			send_interface_toast = {
+				title = hre_overhaul_petition_costs_refunded
+				left_icon = root
+				remove_decision_cooldown = hre_overhaul_petition_kaiser_decision
+				add_prestige_no_experience = standard_activity_base_cost
+			}
+			trigger_event = hre_overhaul_petition.0601
+		}
+		else_if = {
+			# Re-check that the option the player picked is still valid.
+			# Currently only one option (electoral dignity); add trigger_else_if
+			# branches here for new petition types as they're added.
+			limit = {
+				trigger_if = {
+					limit = { var:hre_petition_type = flag:electoral_dignity }
+					hre_petition_electoral_dignity_is_shown_trigger = yes
+					primary_title = {
+						NOT = {
+							is_target_in_global_variable_list = { name = hre_elector_list target = this }
+						}
+					}
+				}
+				trigger_else = { always = no }
+			}
+			scope:petition_kaiser = { trigger_event = hre_overhaul_petition.0001 }
+			# Ghost protection: if the Kaiser ignores the letter event for 30
+			# days the vassal gets a refusal-to-hear notification and the
+			# petition wraps up cleanly.
+			trigger_event = {
+				on_action = hre_overhaul_petition_ghosted
+				days = 30
+			}
+		}
+		else = {
+			# Petition no longer valid (e.g., vassal lost direct vassalage
+			# during travel, primary title changed to an existing electorate).
+			# Refund and notify.
+			send_interface_toast = {
+				title = hre_overhaul_petition_costs_refunded
+				left_icon = root
+				remove_decision_cooldown = hre_overhaul_petition_kaiser_decision
+				add_prestige_no_experience = standard_activity_base_cost
+			}
+			trigger_event = hre_overhaul_petition.0601
+		}
+	}
+}
+
+
+# ============================================================================
+# .0001 — Letter to Kaiser
+# ============================================================================
+# Letter event fired on the Kaiser; vassal is the sender. Kaiser picks "hear
+# out" (-> .0101 audience) or "turn away" (-> .0009 to vassal).
+#
+# Root scope: the Kaiser.
+hre_overhaul_petition.0001 = {
+	type = letter_event
+	opening = hre_overhaul_petition.0001.opening
+	desc = hre_overhaul_petition.0001.desc
+	sender = scope:petition_vassal
+
+	trigger = {
+		is_available = yes
+		scope:petition_vassal = {
+			is_alive = yes
+			is_imprisoned = no
+		}
+	}
+
+	option = { # Hear out
+		name = hre_overhaul_petition.0001.a
+		custom_tooltip = hre_overhaul_petition.0001.a.tt
+		trigger_event = {
+			on_action = hre_overhaul_petition_0101
+		}
+		ai_chance = { base = 100 }
+	}
+
+	option = { # Turn away
+		name = {
+			trigger = {
+				NOR = {
+					has_trait = arrogant
+					has_trait = humble
+				}
+			}
+			text = hre_overhaul_petition.0001.b
+		}
+		name = {
+			trigger = { has_trait = arrogant }
+			text = hre_overhaul_petition.0001.b.arrogant
+		}
+		name = {
+			trigger = { has_trait = humble }
+			text = hre_overhaul_petition.0001.b.humble
+		}
+		custom_tooltip = hre_overhaul_petition.0001.b.tt
+		# Mild opinion hit to the petitioner — being turned away at the door
+		# stings less than being heard and refused.
+		scope:petition_vassal = {
+			add_opinion = {
+				target = scope:petition_kaiser
+				modifier = refused_audience_opinion
+			}
+			trigger_event = hre_overhaul_petition.0009
+		}
+		if = {
+			limit = { NOT = { has_relation_rival = scope:petition_vassal } }
+			stress_impact = {
+				humble = medium_stress_impact_gain
+				just = medium_stress_impact_gain
+			}
+		}
+		else = {
+			stress_impact = { base = medium_stress_impact_loss }
+		}
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 5
+				opinion = { target = scope:petition_vassal value < 0 }
+			}
+			modifier = {
+				add = 45
+				has_relation_rival = scope:petition_vassal
+			}
+		}
+	}
+}
+
+
+# ============================================================================
+# .0009 — Refused to hear (notification to vassal)
+# ============================================================================
+hre_overhaul_petition.0009 = {
+	type = letter_event
+	opening = hre_overhaul_petition.0009.opening
+	desc = hre_overhaul_petition.0009.desc
+	sender = scope:petition_kaiser
+
+	trigger = { hre_overhaul_petition_valid_trigger = yes }
+
+	option = {
+		name = hre_overhaul_petition.0009.a
+		hre_overhaul_petition_cleanup_vars_effect = yes
+	}
+}
+
+
+# ============================================================================
+# .0101 — Court audience on the Kaiser
+# ============================================================================
+# Where the actual acceptance decision happens. The grant option's ai_chance
+# block is the hidden gating logic the design calls for — player never sees
+# why their petition was accepted or refused, only the result.
+#
+# Root scope: the Kaiser.
+hre_overhaul_petition.0101 = {
+	type = court_event
+	title = hre_overhaul_petition.0101.t
+	desc = {
+		desc = hre_overhaul_petition.0101.desc
+		first_valid = {
+			triggered_desc = {
+				trigger = { scope:petition_vassal.var:hre_petition_type = flag:electoral_dignity }
+				desc = hre_overhaul_petition.0101.desc.electoral_dignity
+			}
+		}
+	}
+	theme = realm
+
+	# court_event requires `theme`; without it the engine errors out at load
+	# ("Theme missing in event") and the audience may silently skip.
+	# Portraits/court_scene roles are optional polish — vanilla
+	# petition_liege.0201 adds a court_scene { roles = { ... } } block to put
+	# the petitioner in a kneeling pose. Deferred for later visual polish.
+
+	immediate = {
+		# Root is the Kaiser (this event fires on title:e_hre.holder), so this
+		# saves the Kaiser's opinion of the petitioner. Used by the grant
+		# option's ai_chance compare_modifier below. Pattern matches vanilla
+		# petition_liege.0101:1733-1736.
+		save_opinion_value_as = {
+			name = opinion_of_petitioner
+			target = scope:petition_vassal
+		}
+	}
+
+	# ========================================================================
+	# GRANT
+	# ========================================================================
+	# ai_chance modifiers are the hidden gating logic. Tuning here governs how
+	# rare a successful petition is. Base 0 + heavy modifiers means most
+	# petitions fail; combine high opinion, hook, friendship, war service,
+	# powerful vassal status, and matching culture/faith to break through.
+	option = {
+		name = hre_overhaul_petition.0101.a.grant
+		custom_tooltip = hre_overhaul_petition.0101.a.grant.tt
+
+		show_as_tooltip = {
+			scope:petition_vassal = {
+				hre_overhaul_petition_grant_electoral_dignity_effect = yes
+			}
+		}
+
+		scope:petition_vassal = {
+			trigger_event = { on_action = hre_overhaul_petition_0201 }
+		}
+
+		ai_chance = {
+			base = 0
+
+			# Opinion: scales smoothly. At opinion 100 contributes +30.
+			compare_modifier = {
+				value = scope:opinion_of_petitioner
+				multiplier = 0.3
+			}
+
+			# Bonus thresholds for exceptional opinion (the design doc's "80+
+			# is a positive modifier" beat).
+			modifier = {
+				add = 15
+				opinion = { target = scope:petition_vassal value >= 80 }
+			}
+
+			# Petitioner is a top-N powerful vassal — the design's
+			# "indispensability" beat. Hard for emperor to refuse someone who
+			# meaningfully matters.
+			modifier = {
+				add = 20
+				scope:petition_vassal = { is_powerful_vassal = yes }
+			}
+
+			# Friendship-tier relationship is hard to deny.
+			modifier = {
+				add = 25
+				scope:petition_vassal = {
+					has_any_best_good_relationship_with_character_trigger = { CHARACTER = root }
+				}
+			}
+			modifier = {
+				add = 10
+				scope:petition_vassal = {
+					has_any_moderate_good_relationship_with_character_trigger = { CHARACTER = root }
+				}
+			}
+
+			# Hook = emperor is being squeezed. Big bump.
+			modifier = {
+				add = 50
+				scope:petition_vassal = { has_strong_hook = root }
+			}
+			modifier = {
+				add = 25
+				scope:petition_vassal = {
+					has_hook = root
+					NOT = { has_strong_hook = root }
+				}
+			}
+
+			# Cultural/religious affinity.
+			modifier = {
+				add = 10
+				scope:petition_vassal.culture = root.culture
+			}
+			modifier = {
+				add = 10
+				scope:petition_vassal.faith = root.faith
+			}
+
+			# Rival/nemesis: emperor will never reward a hated vassal absent
+			# strong other reasons.
+			modifier = {
+				add = -50
+				has_relation_rival = scope:petition_vassal
+			}
+			modifier = {
+				add = -100
+				has_relation_nemesis = scope:petition_vassal
+			}
+
+			# Trait nudges — humble/just emperors lean toward granting on
+			# merit; greedy/paranoid emperors hoard influence.
+			ai_value_modifier = {
+				ai_greed = -0.3
+				ai_compassion = 0.2
+				ai_honor = 0.3
+				ai_boldness = -0.2
+			}
+		}
+	}
+
+	# ========================================================================
+	# REFUSE
+	# ========================================================================
+	# Default branch. Base 50 ensures the AI refuses unless the grant option's
+	# modifiers push it well above. Vassal gets an opinion hit and a 15-year
+	# cooldown on retry — has time to build up before another attempt.
+	option = {
+		name = hre_overhaul_petition.0101.b.refuse
+		custom_tooltip = hre_overhaul_petition.0101.b.refuse.tt
+
+		show_as_tooltip = {
+			scope:petition_vassal = {
+				hre_overhaul_petition_refuse_electoral_dignity_effect = yes
+			}
+		}
+
+		scope:petition_vassal = {
+			trigger_event = { on_action = hre_overhaul_petition_0209 }
+		}
+
+		ai_chance = {
+			base = 50
+		}
+	}
+}
+
+
+# ============================================================================
+# .0201 — Grant resolution (court_event on the vassal)
+# ============================================================================
+# Vassal experiences the throne-room scene where the Kaiser delivers the
+# verdict in person — this is the visible "audience" beat from the
+# petitioner's POV. Mirrors vanilla petition_liege.0201
+# (events/activities/petition_liege_activity/petition_liege_events.txt:3392).
+#
+# Earlier versions used letter_event here, which fired correctly but the
+# player only ever saw a piece of mail at the end — the journey to court
+# never visually paid off. court_event with open_view_data opens the
+# royal_court view scoped to the Kaiser so the petitioner sees the throne
+# room and the Kaiser delivering the result.
+#
+# Root scope: the vassal.
+hre_overhaul_petition.0201 = {
+	type = court_event
+	title = hre_overhaul_petition.0201.t
+	desc = hre_overhaul_petition.0201.desc
+	theme = realm
+
+	court_scene = {
+		button_position_character = scope:petition_kaiser
+		court_owner = scope:petition_kaiser
+		roles = {
+			scope:petition_vassal = {
+				role = kneeling
+				animation = throne_room_kneel_1
+			}
+		}
+	}
+
+	trigger = { hre_overhaul_petition_valid_trigger = yes }
+
+	immediate = {
+		scope:petition_kaiser = {
+			open_view_data = {
+				view = royal_court
+				secondary_actor = scope:petition_vassal
+				player = scope:petition_vassal
+			}
+		}
+		show_as_tooltip = {
+			hre_overhaul_petition_grant_electoral_dignity_effect = yes
+		}
+	}
+
+	option = {
+		name = hre_overhaul_petition.0201.a
+		hre_overhaul_petition_grant_electoral_dignity_effect = yes
+	}
+
+	after = {
+		close_view = {
+			view = royal_court
+			player = scope:petition_vassal
+		}
+	}
+}
+
+
+# ============================================================================
+# .0209 — Refusal resolution (court_event on the vassal)
+# ============================================================================
+hre_overhaul_petition.0209 = {
+	type = court_event
+	title = hre_overhaul_petition.0209.t
+	desc = hre_overhaul_petition.0209.desc
+	theme = realm
+
+	court_scene = {
+		button_position_character = scope:petition_kaiser
+		court_owner = scope:petition_kaiser
+		roles = {
+			scope:petition_vassal = {
+				role = kneeling
+				animation = throne_room_kneel_1
+			}
+		}
+	}
+
+	trigger = { hre_overhaul_petition_valid_trigger = yes }
+
+	immediate = {
+		scope:petition_kaiser = {
+			open_view_data = {
+				view = royal_court
+				secondary_actor = scope:petition_vassal
+				player = scope:petition_vassal
+			}
+		}
+		show_as_tooltip = {
+			hre_overhaul_petition_refuse_electoral_dignity_effect = yes
+		}
+	}
+
+	option = {
+		name = hre_overhaul_petition.0209.a
+		hre_overhaul_petition_refuse_electoral_dignity_effect = yes
+	}
+
+	after = {
+		close_view = {
+			view = royal_court
+			player = scope:petition_vassal
+		}
+	}
+}
+
+
+# ============================================================================
+# .0601 — Invalidation
+# ============================================================================
+# Fired when the petition can't proceed (Kaiser dead/imprisoned/deposed,
+# petition prerequisites no longer met). Cleans up vars and shows the vassal
+# a brief notice. Costs were already refunded by .9000 / travel_planner_exit.
+hre_overhaul_petition.0601 = {
+	type = character_event
+	title = hre_overhaul_petition.0601.t
+	desc = hre_overhaul_petition.0601.desc
+	theme = realm
+
+	left_portrait = {
+		character = root
+		animation = disappointment
+	}
+
+	option = {
+		name = hre_overhaul_petition.0601.a
+		hre_overhaul_petition_cleanup_vars_effect = yes
+	}
+}
