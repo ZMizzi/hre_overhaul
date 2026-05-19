@@ -16,6 +16,10 @@ designate_elector_effect = {
 			modifier = designated_elector_opinion
 		}
 	}
+	scope:actor = {
+		add_tyranny = 10
+		}
+	}
 	rebuild_hre_elector_cache_effect = yes
 }
 

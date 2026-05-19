@@ -55,7 +55,7 @@ hre_overhaul_petition_kaiser_decision = {
 	# the player isn't blocked from attempting a different petition type just
 	# because they recently tried electoral dignity.
 	cooldown = {
-		years = 1
+		years = 5
 	}
 
 	is_shown = {

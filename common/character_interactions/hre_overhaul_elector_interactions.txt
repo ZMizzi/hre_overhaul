@@ -11,7 +11,7 @@
 
 designate_elector_interaction = {
 	category = interaction_category_vassal
-	icon = designate_favorite
+	icon = icon_dismiss_temporary_regency
 	interface_priority = 60
 
 	desc = designate_elector_interaction_desc
@@ -25,6 +25,7 @@ designate_elector_interaction = {
 		scope:recipient = {
 			liege = scope:actor
 			highest_held_title_tier >= tier_county
+			NOT = { has_character_flag = prince_elector_flag }
 		}
 	}
 
@@ -67,7 +68,7 @@ designate_elector_interaction = {
 
 strip_elector_interaction = {
 	category = interaction_category_vassal
-	icon = designate_favorite
+	icon = icon_dismiss_temporary_regency
 	interface_priority = 59
 
 	desc = strip_elector_interaction_desc

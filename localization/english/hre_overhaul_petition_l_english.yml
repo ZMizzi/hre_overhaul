@@ -3,7 +3,7 @@
  # Decision — common/decisions/hre_overhaul_petition_decisions.txt
  # ----------------------------------------------------------------------------
  hre_overhaul_petition_kaiser_decision: "Request Electoral Dignity from the Kaiser"
- hre_overhaul_petition_kaiser_decision_desc: "Make the journey to the Imperial court and lay a formal request before the Kaiser. A long-standing privilege of the Empire's vassals — though the Kaiser is under no obligation to grant what is asked."
+ hre_overhaul_petition_kaiser_decision_desc: "Make the journey to the Imperial court and lay a formal request before the Kaiser. A long-standing privilege of the Empire's vassals, though granting such an honor would cause no short amount of grumbling among the other princes of the realm. The Kaiser may choose to grant your request, or refuse it and send you home empty-handed."
  hre_overhaul_petition_kaiser_decision_tooltip: "Travel to the Kaiser's capital and request a boon. The Kaiser will decide whether to receive you, and what to grant."
  hre_overhaul_petition_kaiser_decision_effects: "You will travel to the Kaiser's capital and present your petition. The outcome rests with the Kaiser."
  hre_overhaul_petition_kaiser_decision_confirm: "Set out for the Imperial court"
