@@ -11,7 +11,7 @@
 
 designate_elector_interaction = {
 	category = interaction_category_vassal
-	icon = icon_dismiss_temporary_regency
+	icon = icon_declare_me_regent
 	interface_priority = 60
 
 	desc = designate_elector_interaction_desc

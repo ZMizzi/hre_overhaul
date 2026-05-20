@@ -78,7 +78,7 @@ hre_overhaul_setup_electors_on_action = {
 			# Our seven seats. Six match vanilla; d_swabia replaces d_ostmark.
 			add_to_global_variable_list = { name = hre_elector_list target = title:d_bohemia }
 			add_to_global_variable_list = { name = hre_elector_list target = title:d_angria }
-			add_to_global_variable_list = { name = hre_elector_list target = title:d_east_franconia }
+			add_to_global_variable_list = { name = hre_elector_list target = title:d_upper_lorraine }
 			add_to_global_variable_list = { name = hre_elector_list target = title:d_swabia }
 			add_to_global_variable_list = { name = hre_elector_list target = title:c_mainz }
 			add_to_global_variable_list = { name = hre_elector_list target = title:c_cologne }
