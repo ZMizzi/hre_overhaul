@@ -177,16 +177,20 @@ on_vassal_change = {
 	}
 }
 
-# Re-sync flag on liege change. Two cases this catches:
+# Re-sync flag on liege change. Three cases this catches:
 #   1. Sub-vassal acquires direct-HRE-vassal status while still holding an
 #      elector seat → flag should now be added.
 #   2. Direct HRE vassal becomes a sub-vassal (or independent) while holding
 #      an elector seat → flag should be removed AND the seat itself is
 #      forfeited from hre_elector_list. The Emperor must designate a
-#      replacement to refill the College slot. Unlike on_title_lost (where the
-#      seat persists so the new holder inherits the dignity), losing direct
-#      vassalage strips both the character AND the title — Reichsunmittelbarkeit
-#      is a precondition for the seat, not just the holder.
+#      replacement to refill the College slot. Reichsunmittelbarkeit is a
+#      precondition for the seat, not just the holder.
+#   3. Direct HRE vassal-elector ASCENDS to Emperor → flag is removed (the
+#      Emperor isn't styled as a Prince-Elector), but the seat itself stays
+#      in hre_elector_list as imperial demesne. When the Emperor next grants
+#      the title, on_title_gain re-flags the new direct-vassal holder.
+#      Without this carve-out, the list silently bleeds out across reigns
+#      whenever an elector-dynasty wins the imperial crown.
 # Non-electors hit the else_if branch and are no-ops if they don't already
 # have the flag.
 hre_overhaul_elector_vassal_change_action = {
@@ -204,18 +208,49 @@ hre_overhaul_elector_vassal_change_action = {
 		else_if = {
 			limit = { has_character_flag = prince_elector_flag }
 			remove_character_flag = prince_elector_flag
-			# Strip every electorate seat the character still holds — the seat
-			# follows the character out of the College.
-			every_held_title = {
+			# Case 3 guard: if `this` just became the Emperor, the seat stays
+			# in hre_elector_list. Only sub-vassal/independent transitions
+			# strip seats from the list.
+			if = {
 				limit = {
-					is_target_in_global_variable_list = { name = hre_elector_list target = this }
+					trigger_if = {
+						limit = { exists = title:e_hre.holder }
+						NOT = { this = title:e_hre.holder }
+					}
+					trigger_else = { always = yes }
 				}
-				remove_list_global_variable = { name = hre_elector_list target = this }
-			}
-			rebuild_hre_elector_cache_effect = yes
-			notify_emperor_elector_lost_effect = {
-				EVENT = hre_overhaul_elector.0002
+				every_held_title = {
+					limit = {
+						is_target_in_global_variable_list = { name = hre_elector_list target = this }
+					}
+					remove_list_global_variable = { name = hre_elector_list target = this }
+				}
+				rebuild_hre_elector_cache_effect = yes
+				notify_emperor_elector_lost_effect = {
+					EVENT = hre_overhaul_elector.0002
+				}
 			}
 		}
+	}
+}
+
+
+# ============================================================================
+# YEARLY RECONCILE
+# ============================================================================
+# Safety net: every Jan 1, reconcile hre_elector_list against the
+# prince_elector_flag holders. Mutates the list only — flags are treated as
+# the persistent source of truth. See reconcile_electors_effect in
+# common/scripted_effects/hre_overhaul_elector_effects.txt for the policy.
+
+yearly_global_pulse = {
+	on_actions = {
+		hre_overhaul_yearly_reconcile_electors
+	}
+}
+
+hre_overhaul_yearly_reconcile_electors = {
+	effect = {
+		reconcile_electors_effect = yes
 	}
 }

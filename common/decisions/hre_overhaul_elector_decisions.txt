@@ -1,0 +1,173 @@
+# AI-only decision that refills the College of Electors when membership
+# drops below the historical seven seats. Player-Emperors use the manual
+# designate_elector_interaction; this is purely for AI Emperors.
+#
+# Hidden from the player (`is_shown = always = no`), gated to AI Emperors,
+# fires at most once per year. When the list is short and a qualifying
+# direct vassal exists, the strongest candidate is elevated via
+# designate_elector_effect.
+#
+# Reuses designate_elector_effect as-is — the AI Emperor still pays the
+# 10 tyranny and the recipient still picks up the gratitude opinion.
+# Imperial appointments are political acts even when forced by institutional
+# attrition.
+#
+# Vassal selection: scoring lifted from princely_elective's "Fallback Electors"
+# modifier block (01_princely_elective.txt:102-170). That weight table was
+# vanilla's answer to "if the real electors aren't around, who should we
+# treat as one?" — a near-perfect fit for "who should fill an empty seat?"
+#
+# The score per candidate (each conditional independent, sum determines
+# pick order; ordered_vassal picks the highest):
+#   base                                                        10
+#   same faith as Emperor                                       +15
+#   compatible faith (fully_accepted level)                      +5
+#   theocracy of same faith (Elector-Archbishop fit)             +4
+#   republic                                                     -5
+#   tribal / clan / mercenary / holy order                       -4
+#   same culture as Emperor                                      +4
+#   holds a kingdom or above                                     +5
+#   non-theocratic count                                         -5
+
+replenish_elector_decision = {
+	picture = {
+		reference = "gfx/interface/illustrations/decisions/decision_found_kingdom.dds"
+	}
+	decision_group_type = major
+
+	is_shown = {
+		always = yes
+	}
+
+	ai_check_interval = 12
+
+	ai_potential = {
+		is_ai = yes
+		exists = title:e_hre.holder
+		this = title:e_hre.holder
+	}
+
+	is_valid = {
+		exists = title:e_hre.holder
+		this = title:e_hre.holder
+
+		# Fewer than seven active elector seats.
+		NOT = {
+			global_variable_list_size = {
+				name = hre_elector_list
+				value >= 7
+			}
+		}
+
+		# At least one qualifying direct vassal exists.
+		any_vassal = {
+			highest_held_title_tier >= tier_county
+			NOT = { has_character_flag = prince_elector_flag }
+			primary_title = {
+				NOT = {
+					is_target_in_global_variable_list = { name = hre_elector_list target = this }
+				}
+			}
+		}
+	}
+
+	effect = {
+		save_scope_as = actor
+
+		ordered_vassal = {
+			# Higher score wins. Limit block is the same as is_valid's any_vassal
+			# above — is_valid guarantees at least one match here.
+			limit = {
+				highest_held_title_tier >= tier_county
+				NOT = { has_character_flag = prince_elector_flag }
+				primary_title = {
+					NOT = {
+						is_target_in_global_variable_list = { name = hre_elector_list target = this }
+					}
+				}
+			}
+
+			order_by = {
+				value = 10
+
+				# Slightly favor same faith first.
+				if = {
+					limit = { faith = root.faith }
+					add = 15
+				}
+				# Or compatible faith at least.
+				if = {
+					limit = {
+						faith = {
+							faith_hostility_level = {
+								target = root.faith
+								value = faith_fully_accepted_level
+							}
+						}
+					}
+					add = 5
+				}
+				# Slightly favor theocracies of same faith.
+				if = {
+					limit = {
+						government_has_flag = government_is_theocracy
+						faith = root.faith
+					}
+					add = 4
+				}
+				# Malus for republics.
+				if = {
+					limit = { government_has_flag = government_is_republic }
+					subtract = 5
+				}
+				# Malus for tribal / clan / mercenary / holy order.
+				if = {
+					limit = {
+						OR = {
+							government_has_flag = government_is_tribal
+							government_has_flag = government_is_clan
+							government_has_flag = government_is_mercenary
+							government_has_flag = government_is_holy_order
+						}
+					}
+					subtract = 4
+				}
+				# Slight prioritization for same culture.
+				if = {
+					limit = { culture = root.culture }
+					add = 4
+				}
+				# Favor higher tier titles.
+				if = {
+					limit = { highest_held_title_tier >= tier_kingdom }
+					add = 5
+				}
+				# Disfavor non-theocratic counts.
+				if = {
+					limit = {
+						NOT = { government_has_flag = government_is_theocracy }
+						highest_held_title_tier < tier_duchy
+					}
+					subtract = 5
+				}
+			}
+
+			max = 1
+			save_scope_as = recipient
+		}
+
+		designate_elector_effect = yes
+
+		# Notify the new elector (only displayed if they're the player).
+		scope:recipient = {
+			send_interface_message = {
+				title = designate_elector_notification
+				left_icon = scope:actor
+			}
+		}
+	}
+
+	ai_will_do = {
+		base = 100
+	}
+}

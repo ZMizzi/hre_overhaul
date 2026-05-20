@@ -64,6 +64,7 @@ hre_overhaul_petition_kaiser_decision = {
 		# and Kaiser, not vassal and intermediate liege.
 		exists = title:e_hre.holder
 		liege = title:e_hre.holder
+		NOT = { this = title:e_hre.holder }
 		liege ?= { has_royal_court = yes }
 		has_dlc_feature = royal_court
 		NOT = { has_character_flag = prince_elector_flag }

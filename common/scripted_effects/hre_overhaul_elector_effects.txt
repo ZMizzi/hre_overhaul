@@ -119,3 +119,107 @@ rebuild_hre_elector_cache_effect = {
 	}
 	hre_elector_list_save_effect = yes
 }
+
+
+# Reconcile hre_elector_list against the source-of-truth character flags.
+# Mutates the LIST only — never touches prince_elector_flag. The flag is
+# treated as the persistent designation; the list is a derived projection of
+# "which titles are currently held by flagged direct vassals (or held in
+# imperial demesne, awaiting reassignment)."
+#
+# Two passes:
+#   A. Add — every direct vassal with prince_elector_flag who holds no list
+#      title contributes their primary_title. Recovers from a wiped list
+#      while preserving every existing flag holder's electoral dignity.
+#   B. Remove — every list title whose holder is neither the Emperor nor a
+#      flagged direct vassal is dropped. Catches sub-vassal / independent
+#      transitions that slipped past on_vassal_change, and stale entries
+#      whose holder no longer qualifies.
+#
+# Emperor-held seats are valid: imperial demesne can hold a vacant electorate
+# awaiting grant to a direct vassal (e.g., after a vassal-elector ascends).
+# When the Emperor next grants the title, on_title_gain re-flags the new
+# direct-vassal holder.
+#
+# Mutating hre_elector_list inside every_in_global_list is safe — vanilla
+# uses the same pattern at game_start.txt:4697-4707 (rd_chars_needing_regencies
+# cleanup).
+#
+# Called from yearly_global_pulse (hre_overhaul_yearly_reconcile_electors).
+reconcile_electors_effect = {
+	if = {
+		limit = { exists = title:e_hre.holder }
+		title:e_hre.holder = {
+			save_scope_as = emperor
+
+			# Pass A: add missing seats from flagged direct vassals.
+			every_vassal = {
+				limit = {
+					has_character_flag = prince_elector_flag
+					NOT = {
+						any_held_title = {
+							is_target_in_global_variable_list = { name = hre_elector_list target = this }
+						}
+					}
+				}
+				primary_title ?= {
+					add_to_global_variable_list = { name = hre_elector_list target = this }
+				}
+			}
+		}
+
+		# Pass B: drop seats whose holder no longer qualifies.
+		every_in_global_list = {
+			variable = hre_elector_list
+			save_temporary_scope_as = elector_seat
+			if = {
+				limit = {
+					NOT = {
+						scope:elector_seat = {
+							OR = {
+								# Emperor's demesne — valid (vacant seat awaiting grant).
+								holder = scope:emperor
+								# Flagged direct vassal — the canonical case.
+								holder = {
+									liege = scope:emperor
+									has_character_flag = prince_elector_flag
+								}
+							}
+						}
+					}
+				}
+				remove_list_global_variable = {
+					name = hre_elector_list
+					target = scope:elector_seat
+				}
+			}
+		}
+
+		rebuild_hre_elector_cache_effect = yes
+	}
+}
+
+
+# DEBUG ONLY — remove once the AI decision is confirmed working.
+# Runs the same body as replenish_elector_decision.effect, scope-agnostic
+# so it works from any console-current character. Console: `effect debug_replenish_elector = yes`
+debug_replenish_elector = {
+	title:e_hre.holder ?= {
+		save_scope_as = actor
+		ordered_vassal = {
+			limit = {
+				highest_held_title_tier >= tier_county
+				NOT = { has_character_flag = prince_elector_flag }
+				primary_title = {
+					NOT = {
+						is_target_in_global_variable_list = { name = hre_elector_list target = this }
+					}
+				}
+			}
+			order_by = current_military_strength
+			max = 1
+			save_scope_as = recipient
+		}
+		designate_elector_effect = yes
+	}
+}

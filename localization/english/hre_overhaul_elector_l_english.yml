@@ -60,3 +60,12 @@
  hre_overhaul_elector.0002.t: "An Elector Strays From the Throne"
  hre_overhaul_elector.0002.desc: "[ex_elector.GetTitledFirstName] has lost the privilege of being a direct vassal of the Emperor. The dignity of Prince-Elector has passed from them."
  hre_overhaul_elector.0002.a: "So be it."
+
+ # ----------------------------------------------------------------------------
+ # AI-only decision keys — see common/decisions/hre_overhaul_elector_decisions.txt.
+ # The decision is hidden via `is_shown = always = no` and runs only on AI
+ # Emperors when the College has fallen below seven seats, so these strings
+ # are never displayed in the UI. Present only so the parser has them.
+ # ----------------------------------------------------------------------------
+ replenish_elector_decision: "Replenish the College of Electors"
+ replenish_elector_decision_desc: "An electoral seat stands vacant. The Emperor's hand must elevate a worthy vassal to restore the College."
